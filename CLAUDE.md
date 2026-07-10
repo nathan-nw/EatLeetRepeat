@@ -64,7 +64,7 @@ curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/poll
 
 ## Project rules (the easy-to-break ones)
 
-1. **Never call LeetCode from the client.** Only the poller (`/api/poll` → `lib/poller.ts`) talks to `leetcode.com/graphql`. The UI reads only from our Postgres.
+1. **Never call LeetCode from the browser.** All `leetcode.com/graphql` traffic is server-side, through `lib/leetcode.ts`. The two sanctioned callers are the poller (`/api/poll` → `lib/poller.ts`) and the onboarding handle-validation probe (a server action). The UI reads data only from our Postgres — never LeetCode.
 2. **`/api/poll` must reject unauthenticated requests.** Check `Authorization: Bearer <CRON_SECRET>` before doing anything; 401 otherwise. The URL is public. (This is the *cron* secret — separate from Supabase user auth.)
 3. **Dedup on submission `id` within a user, never on `title_slug`.** Upsert with `ON CONFLICT (user_id, id) DO NOTHING`. A re-solve has a new `id` + `timestamp` and **must** become a new `submissions` row — that's the whole point of the app. Do not "dedupe by problem." Every `submissions` row carries the owning `user_id`.
 4. **Poller is idempotent, self-healing, and loops all users.** Re-running changes nothing; a missed run is recovered next tick. The poll route loads every `profiles` row and polls each user's handle; **one user's failure (bad handle, 429, timeout) must not abort the others** — log it to that user's `poll_runs` and continue. Don't add stateful cursors or "last seen" offsets that would break idempotency.
