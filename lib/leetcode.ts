@@ -97,3 +97,39 @@ export async function leetcodeUserExists(username: string): Promise<boolean> {
   }>(USER_EXISTS_QUERY, { username });
   return data.matchedUser !== null;
 }
+
+export type QuestionData = {
+  questionFrontendId: string;
+  title: string;
+  titleSlug: string;
+  difficulty: string; // Easy | Medium | Hard
+  topicTags: { name: string; slug: string }[];
+};
+
+const QUESTION_DATA_QUERY = /* GraphQL */ `
+  query questionData($titleSlug: String!) {
+    question(titleSlug: $titleSlug) {
+      questionFrontendId
+      title
+      titleSlug
+      difficulty
+      topicTags {
+        name
+        slug
+      }
+    }
+  }
+`;
+
+// Metadata (difficulty, tags, frontend id) for a single problem. Used by the
+// poller to enrich the shared `problems` table for slugs it hasn't seen before.
+// Returns null if the slug is unknown.
+export async function fetchQuestionData(
+  titleSlug: string,
+): Promise<QuestionData | null> {
+  const data = await leetcodeGraphql<{ question: QuestionData | null }>(
+    QUESTION_DATA_QUERY,
+    { titleSlug },
+  );
+  return data.question ?? null;
+}
