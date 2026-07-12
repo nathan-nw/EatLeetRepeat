@@ -1,9 +1,17 @@
 import { getUserSubmissions } from '@/lib/dashboard';
 import { computeRepeats } from '@/lib/stats';
+import { parseFilters, applyFilters, allTags } from '@/lib/filters';
 import { RepeatsList } from '@/components/repeats-list';
+import { FilterBar } from '@/components/filter-bar';
 
-export default async function RepeatsPage() {
-  const submissions = await getUserSubmissions();
+export default async function RepeatsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const all = await getUserSubmissions();
+  const filters = parseFilters(await searchParams);
+  const submissions = applyFilters(all, filters);
   const repeats = computeRepeats(submissions);
 
   return (
@@ -13,6 +21,11 @@ export default async function RepeatsPage() {
         Problems you&apos;ve solved more than once, most-repeated first — each with
         every solve date.
       </p>
+
+      <div className="mb-6">
+        <FilterBar filters={filters} tags={allTags(all)} />
+      </div>
+
       <RepeatsList groups={repeats} />
     </main>
   );
