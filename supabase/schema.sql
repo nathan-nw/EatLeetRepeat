@@ -67,7 +67,7 @@ create table if not exists submissions (
   primary key (user_id, id)
 );
 
--- v2: where the row came from. 'poll' = hourly public-endpoint poller (default),
+-- v2: where the row came from. 'poll' = scheduled public-endpoint poller (default),
 -- 'import' = the user's own history upload (§6). The dedup key stays (user_id, id),
 -- so poller and import share it: re-uploads and concurrent runs insert zero dupes.
 alter table submissions add column if not exists source text not null default 'poll';

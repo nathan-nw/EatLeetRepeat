@@ -18,7 +18,8 @@ export type PollSummary = {
   rateLimited: boolean; // run stopped early on a 429
 };
 
-// The hourly job. Loops over every registered user, records their new accepted
+// The scheduled job (cron-job.org, every 30 min). Loops over every registered
+// user, records their new accepted
 // submissions, enriches shared problem metadata, and writes a per-user poll_runs
 // row. Idempotent and self-healing: re-running changes nothing, a missed tick is
 // recovered next time (rule #4). One user's failure never aborts the others.
@@ -56,7 +57,7 @@ export async function runPoll(): Promise<PollSummary> {
       await logRun(id, 0, 0, 'error', message);
 
       // A 429 is global to our IP — hitting the next user would only make it
-      // worse. Stop the run; the next hourly tick recovers everyone (rule #10).
+      // worse. Stop the run; the next scheduled tick recovers everyone (rule #10).
       if (err instanceof LeetCodeRateLimitError) {
         summary.rateLimited = true;
         break;

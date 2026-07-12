@@ -15,7 +15,7 @@ export default async function SettingsPage() {
       <SettingsForm current={profile?.leetcode_username ?? ''} />
 
       <p className="mt-6 max-w-sm text-xs text-zinc-400 dark:text-zinc-500">
-        Updating your handle changes who the hourly poller tracks going forward.
+        Updating your handle changes who the poller tracks going forward.
         Submissions already recorded stay on your dashboard.
       </p>
     </main>
