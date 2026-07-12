@@ -1,10 +1,7 @@
 import 'server-only';
 import { db } from './db';
-import {
-  fetchRecentAcSubmissions,
-  fetchQuestionData,
-  LeetCodeRateLimitError,
-} from './leetcode';
+import { fetchRecentAcSubmissions, LeetCodeRateLimitError } from './leetcode';
+import { enrichProblems } from './enrich';
 
 // Delay between users so a run with N users doesn't burst N requests at
 // LeetCode at once (CLAUDE.md rule #10). Small — a human user base stays well
@@ -94,6 +91,7 @@ async function pollUser(
     title_slug: s.titleSlug,
     // LeetCode `timestamp` is Unix epoch seconds (rule #5).
     submitted_at: new Date(Number(s.timestamp) * 1000).toISOString(),
+    source: 'poll',
   }));
 
   // ON CONFLICT (user_id, id) DO NOTHING. `.select()` returns only the rows
@@ -112,43 +110,11 @@ async function pollUser(
     new Set((inserted ?? []).map((r) => r.title_slug)),
   );
   if (newSlugs.length > 0) {
+    // Best-effort shared enrichment (also used by the history import).
     await enrichProblems(newSlugs);
   }
 
   return { fetched: subs.length, inserted: inserted?.length ?? 0 };
-}
-
-// Best-effort metadata for slugs missing from the shared `problems` table.
-// Never throws: a failed enrichment leaves the submission recorded and backfills
-// on a later run (rule #6). Enrichment must never block a submission insert.
-async function enrichProblems(slugs: string[]): Promise<void> {
-  const { data: existing } = await db
-    .from('problems')
-    .select('title_slug')
-    .in('title_slug', slugs);
-
-  const have = new Set((existing ?? []).map((r) => r.title_slug));
-  const missing = slugs.filter((s) => !have.has(s));
-
-  for (const slug of missing) {
-    try {
-      const q = await fetchQuestionData(slug);
-      if (!q) continue;
-      await db.from('problems').upsert(
-        {
-          title_slug: q.titleSlug,
-          frontend_id: q.questionFrontendId,
-          title: q.title,
-          difficulty: q.difficulty,
-          topic_tags: q.topicTags.map((t) => t.name),
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'title_slug' },
-      );
-    } catch {
-      // swallow — backfill next run
-    }
-  }
 }
 
 // Observability: one row per user per run (rule #12). user_id is null only for a
