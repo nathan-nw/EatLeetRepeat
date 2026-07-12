@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 const NAV = [
   { href: '/', label: 'Dashboard' },
   { href: '/repeats', label: 'Repeats' },
+  { href: '/settings', label: 'Settings' },
 ];
 
 export function AppHeader({ handle }: { handle: string }) {
