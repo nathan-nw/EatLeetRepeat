@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { runPoll } from '@/lib/poller';
 
-// The poller endpoint — cron-job.org's hourly target. The URL is public, so it
+// The poller endpoint — cron-job.org's scheduled target (every 30 min). The URL is public, so it
 // MUST reject anything without the correct bearer secret before doing any work
 // (rule #2). This route is excluded from the auth proxy (it has no user session).
 export const dynamic = 'force-dynamic';

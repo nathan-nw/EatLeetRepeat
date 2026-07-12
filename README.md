@@ -15,7 +15,7 @@ Every re-solve is recorded as a distinct event rather than collapsed into "alrea
 ## How it works
 
 ```
-                 hourly
+               every 30m
  cron-job.org ──────────▶ GET /api/poll  ──▶  lib/poller.ts
  (Bearer CRON_SECRET)     (secret-gated)       │
                                                │  for each profile (staggered):
@@ -32,7 +32,7 @@ Every re-solve is recorded as a distinct event rather than collapsed into "alrea
 
 - **The poller** (`/api/poll` → `lib/poller.ts`) loops over every `profiles` row, fetches that
   user's recent accepted submissions, and upserts the new ones. It's **idempotent and self-healing**:
-  re-running changes nothing, and a missed hour is recovered on the next tick. One user's failure
+  re-running changes nothing, and a missed run is recovered on the next tick. One user's failure
   (bad handle, timeout, 429) is logged to that user's `poll_runs` and never aborts the others.
 - **Dedup is on the submission `id` within a user**, never on the problem. A re-solve produces a new
   `id` + `timestamp`, so it lands as a *new* row — that's the whole point of the app.
@@ -49,7 +49,7 @@ Every re-solve is recorded as a distinct event rather than collapsed into "alrea
 - **Tailwind CSS** — styling
 - Hand-rolled SVG/Tailwind timeline & heatmap components (no charting dependency)
 - **Vercel** (Hobby) — hosting
-- **cron-job.org** — external hourly scheduler that hits `/api/poll`
+- **cron-job.org** — external scheduler (every 30 min) that hits `/api/poll`
 
 ## Views
 
@@ -120,8 +120,8 @@ and writes one `poll_runs` row per user for observability.
 
 ## Scheduling
 
-Hourly polling is driven by **cron-job.org** (external), which sends
-`Authorization: Bearer <CRON_SECRET>` to `/api/poll` once an hour. This is deliberate: Vercel Hobby
+Polling is driven by **cron-job.org** (external), which sends
+`Authorization: Bearer <CRON_SECRET>` to `/api/poll` every 30 minutes. This is deliberate: Vercel Hobby
 caps cron at once/day, so there is **no `crons` block** in `vercel.json` (adding one fails at
 deploy). See PRD §8 and `CLAUDE.md` rule #9.
 
@@ -132,6 +132,6 @@ deploy). See PRD §8 and `CLAUDE.md` rule #9.
 - **Accepted submissions only, public data only.** The app never touches LeetCode's authenticated
   endpoints and never stores users' LeetCode session cookies. It does use our own Supabase Auth
   (that's required to sign in).
-- **Polite, low-volume polling.** One request per user per hour, staggered within a run, with a
+- **Polite, low-volume polling.** One request per user per run (every 30 min), staggered within a run, with a
   sane `User-Agent` and back-off on HTTP 429. The endpoint is unofficial — see PRD §10 for the
   accepted ToS risk of hosting this publicly.

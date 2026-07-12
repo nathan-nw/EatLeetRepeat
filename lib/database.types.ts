@@ -11,18 +11,33 @@ export type Database = {
         Row: {
           id: string; // uuid, == auth.users.id
           leetcode_username: string;
+          poll_slot: number; // 0-59: which minute of the hour we poll this user
+          last_polled_at: string | null;
+          poll_cadence: string; // hourly | daily
+          verify_token: string | null; // optional ownership verification (§4.2)
+          leetcode_verified_at: string | null;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id: string;
           leetcode_username: string;
+          poll_slot?: number; // DB default is a random 0-59 slot
+          last_polled_at?: string | null;
+          poll_cadence?: string;
+          verify_token?: string | null;
+          leetcode_verified_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           id?: string;
           leetcode_username?: string;
+          poll_slot?: number;
+          last_polled_at?: string | null;
+          poll_cadence?: string;
+          verify_token?: string | null;
+          leetcode_verified_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -36,6 +51,7 @@ export type Database = {
           title_slug: string;
           submitted_at: string; // timestamptz (ISO string)
           first_seen_at: string;
+          source: string; // poll | import
         };
         Insert: {
           id: string;
@@ -44,6 +60,7 @@ export type Database = {
           title_slug: string;
           submitted_at: string;
           first_seen_at?: string;
+          source?: string;
         };
         Update: {
           id?: string;
@@ -52,6 +69,7 @@ export type Database = {
           title_slug?: string;
           submitted_at?: string;
           first_seen_at?: string;
+          source?: string;
         };
         Relationships: [];
       };
@@ -112,6 +130,63 @@ export type Database = {
         };
         Relationships: [];
       };
+      import_jobs: {
+        Row: {
+          id: number;
+          user_id: string; // uuid, owning profile
+          started_at: string;
+          finished_at: string | null;
+          status: string; // pending | parsing | importing | enriching | done | error
+          rows_received: number | null;
+          rows_accepted: number | null;
+          rows_inserted: number | null;
+          rows_skipped: number | null;
+          error: string | null;
+        };
+        Insert: {
+          id?: number;
+          user_id: string;
+          started_at?: string;
+          finished_at?: string | null;
+          status: string;
+          rows_received?: number | null;
+          rows_accepted?: number | null;
+          rows_inserted?: number | null;
+          rows_skipped?: number | null;
+          error?: string | null;
+        };
+        Update: {
+          id?: number;
+          user_id?: string;
+          started_at?: string;
+          finished_at?: string | null;
+          status?: string;
+          rows_received?: number | null;
+          rows_accepted?: number | null;
+          rows_inserted?: number | null;
+          rows_skipped?: number | null;
+          error?: string | null;
+        };
+        Relationships: [];
+      };
+      poller_state: {
+        Row: {
+          id: number;
+          paused_until: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          paused_until?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          paused_until?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: { [_ in never]: never };
     Functions: { [_ in never]: never };
@@ -125,3 +200,4 @@ export type Profile = Database['public']['Tables']['profiles']['Row'];
 export type Submission = Database['public']['Tables']['submissions']['Row'];
 export type Problem = Database['public']['Tables']['problems']['Row'];
 export type PollRun = Database['public']['Tables']['poll_runs']['Row'];
+export type ImportJob = Database['public']['Tables']['import_jobs']['Row'];

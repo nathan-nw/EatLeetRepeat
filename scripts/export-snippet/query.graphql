@@ -1,0 +1,46 @@
+# Captured LeetCode endpoints for the history export (spec §6.2). RESOLVED.
+#
+# The global submissions feed (leetcode.com/submissions/) is RETIRED (404), so
+# there is no single "all my submissions" query. Full history is reconstructed
+# from two endpoints, both called from the user's own logged-in browser by
+# lib/export-snippet.ts (their cookie is applied by the browser via
+# `credentials: 'include'` and is never read/transmitted). Answer to §6.2's
+# global-vs-per-problem question: PER-PROBLEM.
+#
+# ── Stage 1: list the user's problems (GraphQL) ──────────────────────────────
+# POST /graphql  operationName: userProgressQuestionList
+# Paginates via variables { filters: { skip, limit } }.
+#
+#   query userProgressQuestionList($filters: UserProgressQuestionListInput) {
+#     userProgressQuestionList(filters: $filters) {
+#       totalNum
+#       questions { titleSlug numSubmitted questionStatus }
+#     }
+#   }
+#
+# Response: data.userProgressQuestionList.{ totalNum, questions[] }. We keep the
+# titleSlug of every question with numSubmitted > 0, then let Stage 2's
+# Accepted-filter decide what actually counts.
+#
+# ── Stage 2: per-problem submission history (REST) ───────────────────────────
+# GET /api/submissions/{titleSlug}/?offset={n}&limit={m}
+# (No CSRF/GraphQL needed; the browser cookie authenticates it.)
+#
+# Response shape (fields we use in **bold**):
+#   {
+#     "submissions_dump": [
+#       {
+#         "id": 1910645267,            // ← unique per submission (a re-solve = new id)
+#         "title": "Two Sum",
+#         "title_slug": "two-sum",
+#         "timestamp": 1770405838,     // ← Unix epoch SECONDS
+#         "status_display": "Accepted",// ← filter to this exact value
+#         "lang": "python3", "code": "…", "runtime": "…", ...  // ignored
+#       }, ...
+#     ],
+#     "has_next": true,                // ← paginate until false
+#     "last_key": ""
+#   }
+#
+# Output contract (unchanged): a JSON array of { id, title, titleSlug, timestamp }
+# — String(id), title, title_slug→titleSlug, String(timestamp) — accepted only.
