@@ -115,6 +115,43 @@ function level(count: number): number {
   return 4;
 }
 
+// One problem solved on a given day, for the click-to-open day popover.
+export type DayEntry = {
+  slug: string;
+  label: string; // "#1 · Two Sum" (or title fallback)
+  difficulty: DifficultyKey;
+  iso: string; // submitted_at
+};
+
+function displayLabel(
+  problem: SubmissionWithProblem['problem'],
+  fallback: string,
+): string {
+  if (problem?.frontend_id) return `#${problem.frontend_id} · ${problem.title}`;
+  return problem?.title ?? fallback;
+}
+
+// Map of UTC day key → that day's submissions (earliest first). Keyed to match
+// the heatmap cell dates so a cell click can look up its day directly.
+export function buildDayIndex(
+  subs: SubmissionWithProblem[],
+): Record<string, DayEntry[]> {
+  const index: Record<string, DayEntry[]> = {};
+  for (const s of subs) {
+    const key = utcKey(new Date(s.submitted_at));
+    (index[key] ??= []).push({
+      slug: s.title_slug,
+      label: displayLabel(s.problem, s.title),
+      difficulty: difficultyOf(s.problem),
+      iso: s.submitted_at,
+    });
+  }
+  for (const key of Object.keys(index)) {
+    index[key].sort((a, b) => (a.iso < b.iso ? -1 : 1));
+  }
+  return index;
+}
+
 export type HeatDay = { date: string; count: number; level: number } | null;
 export type HeatWeek = HeatDay[]; // length 7, index 0 = Sunday
 export type Heatmap = {

@@ -1,6 +1,11 @@
 import Link from 'next/link';
 import { getUserSubmissions } from '@/lib/dashboard';
-import { computeSummary, buildHeatmap, computeRepeats } from '@/lib/stats';
+import {
+  computeSummary,
+  buildHeatmap,
+  buildDayIndex,
+  computeRepeats,
+} from '@/lib/stats';
 import { parseFilters, applyFilters, allTags } from '@/lib/filters';
 import { SummaryStats } from '@/components/summary-stats';
 import { Heatmap } from '@/components/heatmap';
@@ -18,6 +23,7 @@ export default async function DashboardPage({
 
   const summary = computeSummary(submissions);
   const heatmap = buildHeatmap(submissions);
+  const dayIndex = buildDayIndex(submissions);
   const hasRepeats = computeRepeats(submissions).length > 0;
 
   return (
@@ -33,7 +39,7 @@ export default async function DashboardPage({
           Activity
         </h2>
         <div className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
-          <Heatmap data={heatmap} />
+          <Heatmap data={heatmap} dayIndex={dayIndex} />
         </div>
       </section>
 
