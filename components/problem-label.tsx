@@ -1,6 +1,12 @@
 import Link from 'next/link';
 import type { Problem } from '@/lib/database.types';
 
+// The canonical LeetCode URL for a problem, built from the slug we already
+// store (e.g. "two-sum" → https://leetcode.com/problems/two-sum/). No DB field.
+export function leetcodeUrl(slug: string): string {
+  return `https://leetcode.com/problems/${slug}/`;
+}
+
 // Canonical problem display: `#{frontend_id} · {title}` (CLAUDE.md rule #7).
 // Falls back to the submission title when problem metadata isn't enriched yet.
 export function problemDisplay(

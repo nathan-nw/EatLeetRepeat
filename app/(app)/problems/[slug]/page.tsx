@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { getUserSubmissions } from '@/lib/dashboard';
-import { problemDisplay } from '@/components/problem-label';
+import { problemDisplay, leetcodeUrl } from '@/components/problem-label';
 import { DifficultyBadge } from '@/components/difficulty-badge';
 import { Time } from '@/components/time';
 import type { DifficultyKey } from '@/lib/stats';
@@ -39,7 +39,21 @@ export default async function ProblemPage({
       ) : (
         <>
           <div className="mt-3 flex items-center gap-2">
-            <h1 className="text-lg font-semibold tracking-tight">{title}</h1>
+            <a
+              href={leetcodeUrl(slug)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex items-center gap-1.5 text-lg font-semibold tracking-tight hover:underline"
+              title="Open on LeetCode"
+            >
+              <h1>{title}</h1>
+              <span
+                aria-hidden
+                className="text-zinc-400 transition-colors group-hover:text-zinc-600 dark:group-hover:text-zinc-300"
+              >
+                ↗
+              </span>
+            </a>
             <DifficultyBadge difficulty={difficulty} />
           </div>
 
