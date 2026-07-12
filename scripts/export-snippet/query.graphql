@@ -1,34 +1,46 @@
-# ⚠️ BLOCKING PREREQUISITE — capture this query once (Nathan, not users). Spec §6.2.
+# Captured LeetCode endpoints for the history export (spec §6.2). RESOLVED.
 #
-# The public endpoint only returns each user's most recent 20 accepted
-# submissions. Full history lives behind LeetCode's *authenticated* submissions
-# query, which the export snippet runs in the user's OWN logged-in browser (their
-# cookie is applied by the browser via `credentials: 'include'` and NEVER leaves
-# their machine — see lib/export-snippet.ts).
+# The global submissions feed (leetcode.com/submissions/) is RETIRED (404), so
+# there is no single "all my submissions" query. Full history is reconstructed
+# from two endpoints, both called from the user's own logged-in browser by
+# lib/export-snippet.ts (their cookie is applied by the browser via
+# `credentials: 'include'` and is never read/transmitted). Answer to §6.2's
+# global-vs-per-problem question: PER-PROBLEM.
 #
-# HOW TO CAPTURE:
-#   1. Log in at leetcode.com in your own browser.
-#   2. Open your profile → Submissions. Open DevTools → Network → filter `graphql`.
-#   3. Trigger a submissions load (scroll/paginate) and inspect the request payload.
-#   4. Paste the exact `query` string below, and record the answers in the
-#      QUESTIONS block so lib/export-snippet.ts can be finished.
+# ── Stage 1: list the user's problems (GraphQL) ──────────────────────────────
+# POST /graphql  operationName: userProgressQuestionList
+# Paginates via variables { filters: { skip, limit } }.
 #
-# QUESTIONS to answer from the captured request (these shape the snippet loop):
-#   - GLOBAL FEED (no `questionSlug` var) → one paginated query walks everything. ✅ simple.
-#     PER-PROBLEM (needs `questionSlug`) → snippet must list solved problems, then
-#     paginate within each. Heavier; the snippet's loop changes accordingly.
-#   - Response path to the submissions array (e.g. data.submissionList.submissions).
-#   - Pagination fields: `hasNext` / cursor / offset+limit variable names.
-#   - The accepted-status field name and its exact "accepted" value.
-#   - Whether a status-filter VARIABLE exists (if so, request accepted-only —
-#     can cut a heavy user's payload 5–10×).
+#   query userProgressQuestionList($filters: UserProgressQuestionListInput) {
+#     userProgressQuestionList(filters: $filters) {
+#       totalNum
+#       questions { titleSlug numSubmitted questionStatus }
+#     }
+#   }
 #
-# Until captured, lib/export-snippet.ts ships a clearly-marked STUB. The server
-# import pipeline (/api/import) and the whole UI are already built against the
-# fixed output contract { id, title, titleSlug, timestamp } and do NOT depend on
-# this capture — only the snippet body does.
-
-# TODO(nathan): paste the captured authenticated submissions query here.
-# query submissionList($offset: Int!, $limit: Int!, /* $questionSlug: String */) {
-#   ...
-# }
+# Response: data.userProgressQuestionList.{ totalNum, questions[] }. We keep the
+# titleSlug of every question with numSubmitted > 0, then let Stage 2's
+# Accepted-filter decide what actually counts.
+#
+# ── Stage 2: per-problem submission history (REST) ───────────────────────────
+# GET /api/submissions/{titleSlug}/?offset={n}&limit={m}
+# (No CSRF/GraphQL needed; the browser cookie authenticates it.)
+#
+# Response shape (fields we use in **bold**):
+#   {
+#     "submissions_dump": [
+#       {
+#         "id": 1910645267,            // ← unique per submission (a re-solve = new id)
+#         "title": "Two Sum",
+#         "title_slug": "two-sum",
+#         "timestamp": 1770405838,     // ← Unix epoch SECONDS
+#         "status_display": "Accepted",// ← filter to this exact value
+#         "lang": "python3", "code": "…", "runtime": "…", ...  // ignored
+#       }, ...
+#     ],
+#     "has_next": true,                // ← paginate until false
+#     "last_key": ""
+#   }
+#
+# Output contract (unchanged): a JSON array of { id, title, titleSlug, timestamp }
+# — String(id), title, title_slug→titleSlug, String(timestamp) — accepted only.
