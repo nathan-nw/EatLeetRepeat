@@ -62,3 +62,30 @@ export async function enrichProblems(
   }
   return enriched;
 }
+
+// Backstop sweep for the history import: find slugs referenced by any submission
+// but missing a `problems` row, and enrich a bounded batch. A large import
+// enriches asynchronously; if that is interrupted (serverless timeout), the next
+// poll run finishes the job via this sweep. Bounded so it can't blow the poll
+// route's time budget. Best-effort; never throws.
+export async function enrichMissingSlugs(limit: number): Promise<number> {
+  const { data: subs } = await db
+    .from('submissions')
+    .select('title_slug')
+    .limit(5000);
+  if (!subs || subs.length === 0) return 0;
+
+  const referenced = Array.from(new Set(subs.map((s) => s.title_slug)));
+
+  const { data: known } = await db
+    .from('problems')
+    .select('title_slug')
+    .in('title_slug', referenced);
+  const have = new Set((known ?? []).map((r) => r.title_slug));
+
+  const missing = referenced.filter((s) => !have.has(s)).slice(0, limit);
+  if (missing.length === 0) return 0;
+
+  // ~1s gap keeps this gentle inside the poll budget.
+  return enrichProblems(missing, 1000);
+}

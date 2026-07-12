@@ -1,0 +1,34 @@
+# ⚠️ BLOCKING PREREQUISITE — capture this query once (Nathan, not users). Spec §6.2.
+#
+# The public endpoint only returns each user's most recent 20 accepted
+# submissions. Full history lives behind LeetCode's *authenticated* submissions
+# query, which the export snippet runs in the user's OWN logged-in browser (their
+# cookie is applied by the browser via `credentials: 'include'` and NEVER leaves
+# their machine — see lib/export-snippet.ts).
+#
+# HOW TO CAPTURE:
+#   1. Log in at leetcode.com in your own browser.
+#   2. Open your profile → Submissions. Open DevTools → Network → filter `graphql`.
+#   3. Trigger a submissions load (scroll/paginate) and inspect the request payload.
+#   4. Paste the exact `query` string below, and record the answers in the
+#      QUESTIONS block so lib/export-snippet.ts can be finished.
+#
+# QUESTIONS to answer from the captured request (these shape the snippet loop):
+#   - GLOBAL FEED (no `questionSlug` var) → one paginated query walks everything. ✅ simple.
+#     PER-PROBLEM (needs `questionSlug`) → snippet must list solved problems, then
+#     paginate within each. Heavier; the snippet's loop changes accordingly.
+#   - Response path to the submissions array (e.g. data.submissionList.submissions).
+#   - Pagination fields: `hasNext` / cursor / offset+limit variable names.
+#   - The accepted-status field name and its exact "accepted" value.
+#   - Whether a status-filter VARIABLE exists (if so, request accepted-only —
+#     can cut a heavy user's payload 5–10×).
+#
+# Until captured, lib/export-snippet.ts ships a clearly-marked STUB. The server
+# import pipeline (/api/import) and the whole UI are already built against the
+# fixed output contract { id, title, titleSlug, timestamp } and do NOT depend on
+# this capture — only the snippet body does.
+
+# TODO(nathan): paste the captured authenticated submissions query here.
+# query submissionList($offset: Int!, $limit: Int!, /* $questionSlug: String */) {
+#   ...
+# }

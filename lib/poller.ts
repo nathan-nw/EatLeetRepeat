@@ -1,7 +1,13 @@
 import 'server-only';
 import { db } from './db';
 import { fetchRecentAcSubmissions, LeetCodeRateLimitError } from './leetcode';
-import { enrichProblems } from './enrich';
+import { enrichProblems, enrichMissingSlugs } from './enrich';
+
+// Bounded backstop enrichment per run: fill problem metadata for slugs that have
+// submissions but no `problems` row yet (chiefly from history imports, whose
+// async enrichment may not finish in one request). Small so it never blows the
+// route's time budget.
+const ENRICH_SWEEP_CAP = 25;
 
 // Delay between users so a run with N users doesn't burst N requests at
 // LeetCode at once (CLAUDE.md rule #10). Small — a human user base stays well
@@ -68,6 +74,17 @@ export async function runPoll(): Promise<PollSummary> {
 
     if (i < profiles.length - 1) {
       await sleep(STAGGER_MS);
+    }
+  }
+
+  // Backstop: enrich a bounded batch of slugs still lacking problem metadata
+  // (chiefly from imports). Best-effort; never throws. Skipped after a 429 since
+  // it also hits LeetCode.
+  if (!summary.rateLimited) {
+    try {
+      await enrichMissingSlugs(ENRICH_SWEEP_CAP);
+    } catch {
+      // swallow — retried next tick
     }
   }
 
