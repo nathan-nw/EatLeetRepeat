@@ -42,6 +42,19 @@ export function hasActiveFilters(f: Filters): boolean {
   return Boolean(f.difficulty || f.tag || f.from || f.to);
 }
 
+// Serialize filters back to a query string (`?difficulty=Medium&tag=...`), or an
+// empty string when no filters are active. Inverse of parseFilters; used to keep
+// the URL in sync as filters change client-side.
+export function buildQuery(f: Filters): string {
+  const p = new URLSearchParams();
+  if (f.difficulty) p.set('difficulty', f.difficulty);
+  if (f.tag) p.set('tag', f.tag);
+  if (f.from) p.set('from', f.from);
+  if (f.to) p.set('to', f.to);
+  const s = p.toString();
+  return s ? `?${s}` : '';
+}
+
 // All topic tags present across the user's submissions, sorted. Built from the
 // UNFILTERED set so the dropdown options don't vanish as filters narrow.
 export function allTags(subs: SubmissionWithProblem[]): string[] {
