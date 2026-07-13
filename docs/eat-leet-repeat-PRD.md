@@ -35,7 +35,7 @@ There is **no manual logging**. Each user signs in, registers their public LeetC
 
 ## 4. Users & auth
 
-Multiple users, each with an account. Authentication is via **Supabase Auth** (email magic-link and/or an OAuth provider). On first sign-in a user completes a one-step onboarding: enter their public **LeetCode username**, which is stored on their `profiles` row (§7). That handle is what the poller tracks for them.
+Multiple users, each with an account. Authentication is via **Supabase Auth** using **email + password**: signup requires a one-time email confirmation, after which the user signs in with their email and password (a password-reset flow covers forgotten passwords). On first sign-in a user completes a one-step onboarding: enter their public **LeetCode username**, which is stored on their `profiles` row (§7). That handle is what the poller tracks for them.
 
 - **A LeetCode handle can be claimed by only one account** (enforced by a unique index), so the poller never double-tracks the same handle.
 - **Per-user data isolation** is enforced by Postgres Row Level Security: a signed-in user can read only their own `profiles`, `submissions`, and `poll_runs`. Problem metadata (`problems`) is shared/global and readable by any signed-in user.
@@ -296,7 +296,7 @@ Design direction: clean, minimal, data-forward. A Wealthsimple-style restrained 
 
 ## 13. Suggested build order
 
-1. Provision Supabase project; apply `supabase/schema.sql` (§7, incl. RLS policies). Enable Supabase Auth (email magic-link and/or an OAuth provider). Set `CRON_SECRET` and the Supabase URL/anon/service-role env vars.
+1. Provision Supabase project; apply `supabase/schema.sql` (§7, incl. RLS policies). Enable Supabase Auth email provider with **Confirm email** on (email + password); point the "Confirm signup" and "Reset password" email templates at `/auth/confirm` using the `token_hash`/`type` params. Set `CRON_SECRET` and the Supabase URL/anon/service-role env vars.
 2. Auth + onboarding: sign-in, session handling (`@supabase/ssr`), and the "enter your LeetCode handle" step that writes the `profiles` row (validated against `recentAcSubmissionList`).
 3. Build the GraphQL client; verify `recentAcSubmissionList` against a real username; confirm field shapes.
 4. Poller route `/api/poll`: secret check → load all users → per-user fetch → upsert on `(user_id, id)` → shared enrichment → per-user `poll_runs` logging, with fault isolation + staggering.
