@@ -158,7 +158,8 @@ export type Heatmap = {
   weeks: HeatWeek[];
   monthLabels: { index: number; label: string }[]; // label above column `index`
   maxCount: number;
-  total: number;
+  total: number; // all cells in the rendered (full-history) window
+  lastYearTotal: number; // trailing 53 weeks only — drives the legend copy
 };
 
 export function computeDailyCounts(subs: SubmissionWithProblem[]): Map<string, number> {
@@ -170,11 +171,13 @@ export function computeDailyCounts(subs: SubmissionWithProblem[]): Map<string, n
   return counts;
 }
 
-// GitHub-contribution-style grid for the trailing `weeksCount` weeks, columns =
-// weeks (Sunday-aligned), rows = weekdays.
+// GitHub-contribution-style grid spanning the user's full history — from their
+// earliest submission (or a trailing `minWeeks` window, whichever is longer)
+// through today. Columns = weeks (Sunday-aligned), rows = weekdays. The extra
+// width is what makes the heatmap scrollable back through history.
 export function buildHeatmap(
   subs: SubmissionWithProblem[],
-  weeksCount = 53,
+  minWeeks = 53,
 ): Heatmap {
   const counts = computeDailyCounts(subs);
 
@@ -182,10 +185,31 @@ export function buildHeatmap(
   const end = new Date(
     Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
   );
+
+  // Always guarantee at least a trailing `minWeeks` window (so a brand-new user
+  // still sees a full year), but extend further back if older data exists.
   const start = new Date(end);
-  start.setUTCDate(start.getUTCDate() - (weeksCount * 7 - 1));
+  start.setUTCDate(start.getUTCDate() - (minWeeks * 7 - 1));
+  let earliestKey: string | null = null;
+  for (const key of counts.keys()) {
+    if (earliestKey === null || key < earliestKey) earliestKey = key;
+  }
+  if (earliestKey) {
+    const earliest = new Date(`${earliestKey}T00:00:00Z`);
+    if (earliest < start) start.setTime(earliest.getTime());
+  }
   // Align to the start of the week (Sunday).
   start.setUTCDate(start.getUTCDate() - start.getUTCDay());
+
+  // Trailing-12-month total for the legend (independent of how far the grid
+  // scrolls back). String comparison is valid for YYYY-MM-DD keys.
+  const lastYearStart = new Date(end);
+  lastYearStart.setUTCDate(lastYearStart.getUTCDate() - (53 * 7 - 1));
+  const lastYearStartKey = utcKey(lastYearStart);
+  let lastYearTotal = 0;
+  for (const [key, count] of counts) {
+    if (key >= lastYearStartKey) lastYearTotal += count;
+  }
 
   const weeks: HeatWeek[] = [];
   const monthLabels: { index: number; label: string }[] = [];
@@ -213,12 +237,15 @@ export function buildHeatmap(
     if (firstReal) {
       const month = new Date(`${firstReal.date}T00:00:00Z`).getUTCMonth();
       if (month !== lastMonth) {
-        monthLabels.push({ index: weeks.length, label: MONTHS[month] });
+        // Tag January with the year so multi-year scrolling stays legible.
+        const label =
+          month === 0 ? `${MONTHS[month]} ${firstReal.date.slice(0, 4)}` : MONTHS[month];
+        monthLabels.push({ index: weeks.length, label });
         lastMonth = month;
       }
     }
     weeks.push(week);
   }
 
-  return { weeks, monthLabels, maxCount, total };
+  return { weeks, monthLabels, maxCount, total, lastYearTotal };
 }
