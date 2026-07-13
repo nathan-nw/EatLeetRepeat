@@ -132,9 +132,22 @@ export function Heatmap({
             ))}
           </div>
 
-          {/* Legend + total. */}
-          <div className="mt-1 flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400">
-            <span>{data.lastYearTotal} submissions in the last year</span>
+          {/* Per-year submission totals, aligned under each January column. Text
+              overflows its 11px cell into the empty columns to its right (same
+              trick as the month labels). */}
+          <div className="mt-1 flex gap-[3px] pl-[3px] text-[10px] font-medium text-zinc-500 dark:text-zinc-400">
+            {data.weeks.map((_, i) => {
+              const label = data.yearLabels.find((y) => y.index === i)?.label;
+              return (
+                <div key={i} className="w-[11px] whitespace-nowrap">
+                  {label ?? ''}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Legend. */}
+          <div className="mt-1 flex items-center justify-end text-[11px] text-zinc-500 dark:text-zinc-400">
             <span className="flex items-center gap-1">
               Less
               {LEVEL_CLASSES.map((c, i) => (

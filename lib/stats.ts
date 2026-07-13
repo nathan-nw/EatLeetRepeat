@@ -157,6 +157,7 @@ export type HeatWeek = HeatDay[]; // length 7, index 0 = Sunday
 export type Heatmap = {
   weeks: HeatWeek[];
   monthLabels: { index: number; label: string }[]; // label above column `index`
+  yearLabels: { index: number; label: string }[]; // count under each January column
   maxCount: number;
   total: number; // all cells in the rendered (full-history) window
   lastYearTotal: number; // trailing 53 weeks only — drives the legend copy
@@ -211,8 +212,18 @@ export function buildHeatmap(
     if (key >= lastYearStartKey) lastYearTotal += count;
   }
 
+  // Per-calendar-year totals, surfaced under each January column. The current
+  // year shows the trailing-12-month figure instead (the year's still running).
+  const yearTotals = new Map<string, number>();
+  for (const [key, count] of counts) {
+    const y = key.slice(0, 4);
+    yearTotals.set(y, (yearTotals.get(y) ?? 0) + count);
+  }
+  const currentYear = String(end.getUTCFullYear());
+
   const weeks: HeatWeek[] = [];
   const monthLabels: { index: number; label: string }[] = [];
+  const yearLabels: { index: number; label: string }[] = [];
   let lastMonth = -1;
   let maxCount = 0;
   let total = 0;
@@ -237,15 +248,22 @@ export function buildHeatmap(
     if (firstReal) {
       const month = new Date(`${firstReal.date}T00:00:00Z`).getUTCMonth();
       if (month !== lastMonth) {
+        const year = firstReal.date.slice(0, 4);
         // Tag January with the year so multi-year scrolling stays legible.
-        const label =
-          month === 0 ? `${MONTHS[month]} ${firstReal.date.slice(0, 4)}` : MONTHS[month];
+        const label = month === 0 ? `${MONTHS[month]} ${year}` : MONTHS[month];
         monthLabels.push({ index: weeks.length, label });
+        if (month === 0) {
+          const count =
+            year === currentYear ? lastYearTotal : (yearTotals.get(year) ?? 0);
+          const text =
+            year === currentYear ? `${count} in the last year` : `${count} in ${year}`;
+          yearLabels.push({ index: weeks.length, label: text });
+        }
         lastMonth = month;
       }
     }
     weeks.push(week);
   }
 
-  return { weeks, monthLabels, maxCount, total, lastYearTotal };
+  return { weeks, monthLabels, yearLabels, maxCount, total, lastYearTotal };
 }
