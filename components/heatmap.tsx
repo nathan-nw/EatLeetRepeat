@@ -48,7 +48,16 @@ export function Heatmap({
   dayIndex: Record<string, DayEntry[]>;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<Selected | null>(null);
+
+  // Open pinned to the most recent week (today at the right edge); the user
+  // scrolls left to go back through history. Re-pins if the grid width changes
+  // (e.g. filters rebuild the data).
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollLeft = el.scrollWidth;
+  }, [data.weeks.length]);
 
   // Close on Escape.
   useEffect(() => {
@@ -77,7 +86,7 @@ export function Heatmap({
 
   return (
     <div ref={rootRef} className="relative">
-      <div className="overflow-x-auto">
+      <div ref={scrollRef} className="overflow-x-auto">
         <div className="inline-flex min-w-full flex-col gap-1">
           {/* Month labels aligned to the week columns. */}
           <div className="flex gap-[3px] pl-[3px] text-[10px] text-zinc-400 dark:text-zinc-500">
@@ -123,9 +132,22 @@ export function Heatmap({
             ))}
           </div>
 
-          {/* Legend + total. */}
-          <div className="mt-1 flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400">
-            <span>{data.total} submissions in the last year</span>
+          {/* Per-year submission totals, aligned under each January column. Text
+              overflows its 11px cell into the empty columns to its right (same
+              trick as the month labels). */}
+          <div className="mt-1 flex gap-[3px] pl-[3px] text-[10px] font-medium text-zinc-500 dark:text-zinc-400">
+            {data.weeks.map((_, i) => {
+              const label = data.yearLabels.find((y) => y.index === i)?.label;
+              return (
+                <div key={i} className="w-[11px] whitespace-nowrap">
+                  {label ?? ''}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Legend. */}
+          <div className="mt-1 flex items-center justify-end text-[11px] text-zinc-500 dark:text-zinc-400">
             <span className="flex items-center gap-1">
               Less
               {LEVEL_CLASSES.map((c, i) => (
