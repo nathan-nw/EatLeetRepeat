@@ -64,7 +64,7 @@ export default function LandingPage() {
               <span>More</span>
             </div>
           </div>
-          <div className="mt-4 overflow-x-auto">
+          <div className="mt-4 overflow-hidden">
             <DemoHeatmap />
           </div>
         </div>
@@ -180,9 +180,13 @@ const FEATURES = [
   },
 ];
 
-// A decorative ~year-long contribution grid. Intensity is a fixed, deterministic
-// function of the cell index (no randomness → no hydration surprises), shaped to
-// look like real activity: busier weekdays, a couple of quiet stretches.
+// Continuously scrolling marquee of a decorative ~year-long contribution grid.
+// Intensity is a fixed, deterministic function of the cell index (no randomness →
+// no hydration surprises), shaped to look like real activity: busier weekdays, a
+// couple of quiet stretches. Two identical copies sit side by side and the track
+// translates by exactly one copy's width, so the loop is seamless. Columns carry
+// a right margin (instead of a container gap) so the two copies butt together
+// with consistent spacing — that's what makes -50% land perfectly.
 function DemoHeatmap() {
   const weeks = 53;
   const days = 7;
@@ -195,10 +199,10 @@ function DemoHeatmap() {
     columns.push(col);
   }
 
-  return (
-    <div className="flex gap-[3px]">
+  const grid = (
+    <div className="flex shrink-0">
       {columns.map((col, w) => (
-        <div key={w} className="flex flex-col gap-[3px]">
+        <div key={w} className="mr-[3px] flex flex-col gap-[3px]">
           {col.map((level, d) => (
             <span key={d} className={`${CELL} ${LEVELS[level]}`} />
           ))}
@@ -206,7 +210,31 @@ function DemoHeatmap() {
       ))}
     </div>
   );
+
+  return (
+    <div className="flex w-max elr-heatmap-track" aria-hidden="true">
+      <style>{MARQUEE_CSS}</style>
+      {grid}
+      {grid}
+    </div>
+  );
 }
+
+// Pure-CSS seamless marquee. Duplicated content + translateX(-50%) loops without
+// a seam; paused only for users who prefer reduced motion.
+const MARQUEE_CSS = `
+.elr-heatmap-track {
+  animation: elr-heatmap-scroll 60s linear infinite;
+  will-change: transform;
+}
+@keyframes elr-heatmap-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .elr-heatmap-track { animation: none; }
+}
+`;
 
 function intensity(week: number, day: number): number {
   // Weekends lean quieter; two "vacation" weeks are near-empty; otherwise a
