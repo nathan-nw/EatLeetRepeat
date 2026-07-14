@@ -8,7 +8,7 @@ export default async function OnboardingPage() {
   // Already connected a handle? Skip onboarding.
   const profile = await getProfile();
   if (profile) {
-    redirect('/');
+    redirect('/dashboard');
   }
 
   return (

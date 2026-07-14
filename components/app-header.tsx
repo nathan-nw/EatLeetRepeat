@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const NAV = [
-  { href: '/', label: 'Dashboard' },
+  { href: '/dashboard', label: 'Dashboard' },
   { href: '/repeats', label: 'Repeats' },
   { href: '/import', label: 'Import' },
   { href: '/settings', label: 'Settings' },
@@ -17,15 +17,12 @@ export function AppHeader({ handle }: { handle: string }) {
     <header className="border-b border-zinc-200 dark:border-zinc-800">
       <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-6 py-3">
         <div className="flex items-center gap-6">
-          <Link href="/" className="text-sm font-semibold tracking-tight">
+          <Link href="/dashboard" className="text-sm font-semibold tracking-tight">
             Eat Leet Repeat
           </Link>
           <nav className="flex items-center gap-4 text-sm">
             {NAV.map((item) => {
-              const active =
-                item.href === '/'
-                  ? pathname === '/'
-                  : pathname.startsWith(item.href);
+              const active = pathname.startsWith(item.href);
               return (
                 <Link
                   key={item.href}

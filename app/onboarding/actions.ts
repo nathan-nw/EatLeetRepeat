@@ -34,10 +34,10 @@ export async function saveHandle(
         };
       }
       // Already onboarded — just move on.
-      redirect('/');
+      redirect('/dashboard');
     }
     return { error: 'Something went wrong saving your handle. Please try again.' };
   }
 
-  redirect('/');
+  redirect('/dashboard');
 }
