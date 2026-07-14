@@ -26,12 +26,14 @@ export default function LandingPage() {
           LeetCode, over time
         </p>
         <h1 className="mt-3 max-w-2xl text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
-          Track your LeetCode activity — and every re-solve.
+          Eat. Sleep. Leet. Repeat.
         </h1>
         <p className="mt-5 max-w-xl text-lg text-zinc-500 dark:text-zinc-400">
-          Register your public handle once. We quietly record your accepted
-          submissions and surface the problems you come back to, so spaced
-          repetition actually sticks. No manual logging.
+          The clearest way to track your prep while you&rsquo;re recruiting.
+          Unlike a plain solved-count, we record every accepted submission —
+          including the problems you go back and re-solve — so you can see what
+          you&rsquo;ve truly drilled, not just what you cleared once. No manual
+          logging.
         </p>
         <div className="mt-8 flex items-center gap-4">
           <a
@@ -87,6 +89,50 @@ export default function LandingPage() {
               </p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* How it works + safety */}
+      <section className="mx-auto max-w-4xl px-6 pb-20">
+        <h2 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+          Only your public username — nothing more
+        </h2>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-xl border border-zinc-200 p-5 dark:border-zinc-800">
+            <p className="font-medium">Just your public handle</p>
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              Enter your public LeetCode username once. From then on we read only
+              your public accepted submissions — no LeetCode password, no login,
+              and no access to your account. That&rsquo;s all it takes to start
+              tracking.
+            </p>
+          </div>
+          <div className="rounded-xl border border-zinc-200 p-5 dark:border-zinc-800">
+            <p className="font-medium">
+              Optional: import your full history{' '}
+              <span className="text-zinc-400 dark:text-zinc-500">
+                — and it&rsquo;s safe
+              </span>
+            </p>
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              The public API only exposes your recent solves. To bring in older
+              ones, you can run a small export script — and you never have to take
+              our word that it&rsquo;s safe:
+            </p>
+            <ul className="mt-3 flex flex-col gap-2 text-sm text-zinc-500 dark:text-zinc-400">
+              {SAFETY_POINTS.map((point) => (
+                <li key={point} className="flex gap-2">
+                  <span
+                    aria-hidden="true"
+                    className="mt-0.5 text-emerald-600 dark:text-emerald-400"
+                  >
+                    ✓
+                  </span>
+                  <span>{point}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </section>
 
@@ -178,6 +224,15 @@ const FEATURES = [
     title: 'Per-problem history',
     body: 'Open any problem to see each distinct attempt over time, not just the latest.',
   },
+];
+
+// Honest, verifiable claims about the optional history-export script — these
+// mirror what lib/export-snippet.ts actually does.
+const SAFETY_POINTS = [
+  'Read the entire script first — the full source is shown right on the import page before you copy it.',
+  'It runs in your own browser, in the DevTools console on your logged-in LeetCode tab. Nothing runs on our servers.',
+  'It never reads, prints, or transmits your password or session cookie — your login stays in your browser.',
+  'Its only output is a file that downloads to your computer, which you then choose to upload. Nothing is sent anywhere automatically.',
 ];
 
 // Continuously scrolling marquee of a decorative ~year-long contribution grid.
