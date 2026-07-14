@@ -80,7 +80,7 @@ curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/poll
 
 ## Out of scope (don't gold-plate)
 
-Historical backfill, failed attempts, LeetCode session-cookie flows, social/sharing, and streak/summary reports beyond the basic count stats. These are noted in PRD §11. Auth is **in** scope (Supabase Auth + onboarding) — but keep it minimal (magic-link or one OAuth provider, a single handle field). Ship the core loop first: sign in → set handle → poll (all users) → store → the four views (timeline, heatmap, repeats, per-problem history) + summary stats + filters.
+Historical backfill, failed attempts, LeetCode session-cookie flows, social/sharing, and streak/summary reports beyond the basic count stats. These are noted in PRD §11. Auth is **in** scope (Supabase Auth + onboarding) — but keep it minimal (email + password with a one-time email confirmation on signup, plus a password-reset flow; a single handle field). Ship the core loop first: sign in → set handle → poll (all users) → store → the four views (timeline, heatmap, repeats, per-problem history) + summary stats + filters.
 
 ## Definition of done
 

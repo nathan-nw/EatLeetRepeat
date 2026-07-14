@@ -16,6 +16,7 @@ export type Database = {
           poll_cadence: string; // hourly | daily
           verify_token: string | null; // optional ownership verification (§4.2)
           leetcode_verified_at: string | null;
+          has_password: boolean; // has the user set an email/password credential
           created_at: string;
           updated_at: string;
         };
@@ -27,6 +28,7 @@ export type Database = {
           poll_cadence?: string;
           verify_token?: string | null;
           leetcode_verified_at?: string | null;
+          has_password?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -38,6 +40,7 @@ export type Database = {
           poll_cadence?: string;
           verify_token?: string | null;
           leetcode_verified_at?: string | null;
+          has_password?: boolean;
           created_at?: string;
           updated_at?: string;
         };

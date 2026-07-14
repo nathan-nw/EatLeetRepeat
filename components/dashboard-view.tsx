@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import Link from 'next/link';
 import type { SubmissionWithProblem } from '@/lib/dashboard';
-import type { Filters } from '@/lib/filters';
+import { applyFilters, type Filters } from '@/lib/filters';
 import {
   computeSummary,
   buildHeatmap,
@@ -28,6 +28,12 @@ export function DashboardView({
   const { filters, filtered, tags, update, clear } = useFilters(all, initialFilters);
 
   const summary = useMemo(() => computeSummary(filtered), [filtered]);
+  // Difficulty breakdown ignores the difficulty filter itself so all three stay
+  // visible/switchable while one is active (faceted-count behavior).
+  const difficultyCounts = useMemo(
+    () => computeSummary(applyFilters(all, { ...filters, difficulty: null })).byDifficulty,
+    [all, filters],
+  );
   const heatmap = useMemo(() => buildHeatmap(filtered), [filtered]);
   const dayIndex = useMemo(() => buildDayIndex(filtered), [filtered]);
   const hasRepeats = useMemo(() => computeRepeats(filtered).length > 0, [filtered]);
@@ -38,7 +44,14 @@ export function DashboardView({
         <FilterBar filters={filters} tags={tags} onChange={update} onClear={clear} />
       </div>
 
-      <SummaryStats stats={summary} />
+      <SummaryStats
+        stats={summary}
+        difficultyCounts={difficultyCounts}
+        activeDifficulty={filters.difficulty}
+        onSelectDifficulty={(d) =>
+          update({ difficulty: filters.difficulty === d ? null : d })
+        }
+      />
 
       <section className="mt-8">
         <h2 className="mb-3 text-sm font-semibold text-zinc-700 dark:text-zinc-300">

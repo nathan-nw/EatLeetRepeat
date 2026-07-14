@@ -1,4 +1,4 @@
-import { SignInForm } from '@/components/signin-form';
+import Link from 'next/link';
 
 // Public marketing landing page served at `/`. Signed-in users are redirected to
 // `/dashboard` by the middleware before they ever reach this. No AppHeader / gate.
@@ -100,11 +100,22 @@ export default function LandingPage() {
             Start tracking in seconds
           </h2>
           <p className="mt-2 max-w-sm text-sm text-zinc-500 dark:text-zinc-400">
-            Enter your email — we&rsquo;ll send a magic link to sign you in. Add
-            your LeetCode handle next and you&rsquo;re done.
+            Create an account with your email and password, add your LeetCode
+            handle, and you&rsquo;re done.
           </p>
-          <div className="mt-8 w-full max-w-sm text-left">
-            <SignInForm />
+          <div className="mt-8 flex items-center gap-4">
+            <Link
+              href="/login"
+              className="rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 dark:bg-white dark:text-zinc-900"
+            >
+              Create your account
+            </Link>
+            <Link
+              href="/login"
+              className="text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+            >
+              Sign in
+            </Link>
           </div>
         </div>
       </section>

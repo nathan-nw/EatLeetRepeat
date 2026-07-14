@@ -18,8 +18,8 @@
 
 export const EXPORT_FILENAME = "leetcode-history.json";
 
-// Non-negotiable pacing: delay between every request so the user's own account
-// isn't rate-limited during the one burst of requests this makes (spec §6.3).
+// Non-negotiable pacing: delay between every request so this one burst doesn't
+// get the user's own account rate-limited (spec §6.3).
 export const EXPORT_PAGE_DELAY_MS = 1500;
 
 export const EXPORT_SNIPPET = `/*
@@ -54,7 +54,8 @@ export const EXPORT_SNIPPET = `/*
     '{ userProgressQuestionList(filters: $filters) ' +
     '{ totalNum questions { titleSlug numSubmitted } } }';
 
-  // 1) List every problem you've submitted to.
+  // 1) List the user's problems. The progress list also includes problems they
+  //    only viewed, so keep only those with submissions (numSubmitted > 0).
   const slugs = [];
   let skip = 0;
   let total = Infinity;
