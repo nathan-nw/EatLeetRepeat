@@ -122,9 +122,28 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-zinc-200 dark:border-zinc-800">
-        <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-6 py-6 text-xs text-zinc-500 dark:text-zinc-400">
-          <span>Eat Leet Repeat</span>
+        <div className="mx-auto flex max-w-4xl flex-col items-center justify-between gap-2 px-6 py-6 text-xs text-zinc-500 sm:flex-row dark:text-zinc-400">
           <span>Reads only your public LeetCode activity.</span>
+          <span className="flex items-center gap-1.5">
+            Made by
+            <a
+              href="https://github.com/nathan-nw"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-zinc-700 underline-offset-2 transition-colors hover:text-zinc-900 hover:underline dark:text-zinc-300 dark:hover:text-zinc-100"
+            >
+              @nathan-nw
+            </a>
+            <span aria-hidden="true">·</span>
+            <a
+              href="https://x.com/Nathan_nww"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-zinc-700 underline-offset-2 transition-colors hover:text-zinc-900 hover:underline dark:text-zinc-300 dark:hover:text-zinc-100"
+            >
+              @Nathan_nww on X
+            </a>
+          </span>
         </div>
       </footer>
     </main>
