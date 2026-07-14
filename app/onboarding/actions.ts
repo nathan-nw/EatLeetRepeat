@@ -17,9 +17,12 @@ export async function saveHandle(
 
   const { supabase, user } = await requireUser();
 
+  // New users reach onboarding via the email+password signup flow, so they
+  // already have a password — record that so the settings change-password form
+  // requires confirming the current one.
   const { error } = await supabase
     .from('profiles')
-    .insert({ id: user.id, leetcode_username: check.handle });
+    .insert({ id: user.id, leetcode_username: check.handle, has_password: true });
 
   if (error) {
     // 23505 = unique_violation. On lower(leetcode_username) it means the handle

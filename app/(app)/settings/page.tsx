@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getProfile } from '@/lib/auth';
 import { SettingsForm } from './settings-form';
+import { PasswordForm } from './password-form';
 
 export default async function SettingsPage() {
   // The (app) layout already guarantees an onboarded profile.
@@ -19,6 +20,15 @@ export default async function SettingsPage() {
         Updating your handle changes who the poller tracks going forward.
         Submissions already recorded stay on your dashboard.
       </p>
+
+      <hr className="my-8 border-zinc-200 dark:border-zinc-800" />
+
+      <h2 className="text-base font-semibold tracking-tight">Password</h2>
+      <p className="mt-1 max-w-sm text-sm text-zinc-500 dark:text-zinc-400">
+        Set a new password for signing in. You&apos;ll use it next time you log
+        in.
+      </p>
+      <PasswordForm requiresCurrent={profile?.has_password ?? false} />
 
       <hr className="my-8 border-zinc-200 dark:border-zinc-800" />
 

@@ -25,7 +25,7 @@ export default function ResetPasswordPage() {
 
     setBusy(true);
     const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.auth.updateUser({ password });
+    const { data, error } = await supabase.auth.updateUser({ password });
 
     if (error) {
       // Most common cause: no recovery session (link expired or opened without
@@ -37,6 +37,16 @@ export default function ResetPasswordPage() {
       );
       setBusy(false);
       return;
+    }
+
+    // Record that this account now has a password, so the settings form will
+    // require the current one on future changes. Best-effort: a profile row may
+    // not exist yet if the user never onboarded — ignore that case.
+    if (data.user) {
+      await supabase
+        .from('profiles')
+        .update({ has_password: true, updated_at: new Date().toISOString() })
+        .eq('id', data.user.id);
     }
 
     // Password set — full navigation so the app tree re-runs its auth gate.
