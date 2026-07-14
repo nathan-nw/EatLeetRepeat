@@ -45,6 +45,14 @@ alter table profiles add column if not exists poll_cadence         text not null
 alter table profiles add column if not exists verify_token         text;
 alter table profiles add column if not exists leetcode_verified_at timestamptz;
 
+-- has_password: whether this user has set an email/password credential. Users
+-- created via the legacy magic-link flow have none (default false), so the
+-- settings "change password" form lets them set one WITHOUT a current-password
+-- check. Once a password is set (signup, reset, or the settings form) this flips
+-- true and future changes require confirming the current password. Supabase does
+-- not expose a "has password" flag to the client, so we track it ourselves.
+alter table profiles add column if not exists has_password boolean not null default false;
+
 -- Backfill a poll_slot for any pre-v2 row that predates the column, then make it
 -- required so every future insert must carry one (onboarding sets it).
 update profiles set poll_slot = floor(random() * 60)::smallint where poll_slot is null;
