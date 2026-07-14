@@ -1,0 +1,193 @@
+import { SignInForm } from '@/components/signin-form';
+
+// Public marketing landing page served at `/`. Signed-in users are redirected to
+// `/dashboard` by the middleware before they ever reach this. No AppHeader / gate.
+export default function LandingPage() {
+  return (
+    <main className="flex-1">
+      {/* Slim top bar */}
+      <header className="border-b border-zinc-200 dark:border-zinc-800">
+        <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-6 py-4">
+          <span className="text-sm font-semibold tracking-tight">
+            Eat Leet Repeat
+          </span>
+          <a
+            href="#start"
+            className="text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+          >
+            Sign in
+          </a>
+        </div>
+      </header>
+
+      {/* Hero */}
+      <section className="mx-auto max-w-4xl px-6 pt-20 pb-16 sm:pt-28">
+        <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
+          LeetCode, over time
+        </p>
+        <h1 className="mt-3 max-w-2xl text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
+          Track your LeetCode activity — and every re-solve.
+        </h1>
+        <p className="mt-5 max-w-xl text-lg text-zinc-500 dark:text-zinc-400">
+          Register your public handle once. We quietly record your accepted
+          submissions and surface the problems you come back to, so spaced
+          repetition actually sticks. No manual logging.
+        </p>
+        <div className="mt-8 flex items-center gap-4">
+          <a
+            href="#start"
+            className="rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 dark:bg-white dark:text-zinc-900"
+          >
+            Get started
+          </a>
+          <a
+            href="#features"
+            className="text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+          >
+            See what you get →
+          </a>
+        </div>
+      </section>
+
+      {/* Heatmap showcase — the app's signature visual */}
+      <section className="mx-auto max-w-4xl px-6 pb-16">
+        <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+              Your year of solving
+            </p>
+            <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+              <span>Less</span>
+              {LEVELS.map((cls, i) => (
+                <span key={i} className={`${CELL} ${cls}`} />
+              ))}
+              <span>More</span>
+            </div>
+          </div>
+          <div className="mt-4 overflow-x-auto">
+            <DemoHeatmap />
+          </div>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section id="features" className="mx-auto max-w-4xl px-6 pb-20">
+        <h2 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+          Four ways to see your progress
+        </h2>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {FEATURES.map((f) => (
+            <div
+              key={f.title}
+              className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800"
+            >
+              <p className="font-medium">{f.title}</p>
+              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                {f.body}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Sign-in — the scroll target */}
+      <section
+        id="start"
+        className="border-t border-zinc-200 dark:border-zinc-800"
+      >
+        <div className="mx-auto flex max-w-4xl flex-col items-center px-6 py-20 text-center">
+          <h2 className="text-2xl font-semibold tracking-tight">
+            Start tracking in seconds
+          </h2>
+          <p className="mt-2 max-w-sm text-sm text-zinc-500 dark:text-zinc-400">
+            Enter your email — we&rsquo;ll send a magic link to sign you in. Add
+            your LeetCode handle next and you&rsquo;re done.
+          </p>
+          <div className="mt-8 w-full max-w-sm text-left">
+            <SignInForm />
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-zinc-200 dark:border-zinc-800">
+        <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-6 py-6 text-xs text-zinc-500 dark:text-zinc-400">
+          <span>Eat Leet Repeat</span>
+          <span>Reads only your public LeetCode activity.</span>
+        </div>
+      </footer>
+    </main>
+  );
+}
+
+// Sequential single-hue ramp (emerald), mirrored from components/heatmap.tsx so
+// the marketing preview matches the real dashboard chart. Level 0 is neutral.
+const LEVELS = [
+  'bg-zinc-100 dark:bg-zinc-800/70',
+  'bg-emerald-200 dark:bg-emerald-900',
+  'bg-emerald-300 dark:bg-emerald-700',
+  'bg-emerald-500 dark:bg-emerald-600',
+  'bg-emerald-600 dark:bg-emerald-400',
+];
+const CELL = 'h-[11px] w-[11px] rounded-[2px]';
+
+const FEATURES = [
+  {
+    title: 'Timeline',
+    body: 'A running feed of your accepted submissions, newest first, with difficulty and tags.',
+  },
+  {
+    title: 'Activity heatmap',
+    body: 'A GitHub-style calendar of every solve — spot streaks and gaps at a glance.',
+  },
+  {
+    title: 'Re-solves',
+    body: 'The whole point: problems you’ve solved more than once, ranked by how often you return.',
+  },
+  {
+    title: 'Per-problem history',
+    body: 'Open any problem to see each distinct attempt over time, not just the latest.',
+  },
+];
+
+// A decorative ~year-long contribution grid. Intensity is a fixed, deterministic
+// function of the cell index (no randomness → no hydration surprises), shaped to
+// look like real activity: busier weekdays, a couple of quiet stretches.
+function DemoHeatmap() {
+  const weeks = 53;
+  const days = 7;
+  const columns: number[][] = [];
+  for (let w = 0; w < weeks; w++) {
+    const col: number[] = [];
+    for (let d = 0; d < days; d++) {
+      col.push(intensity(w, d));
+    }
+    columns.push(col);
+  }
+
+  return (
+    <div className="flex gap-[3px]">
+      {columns.map((col, w) => (
+        <div key={w} className="flex flex-col gap-[3px]">
+          {col.map((level, d) => (
+            <span key={d} className={`${CELL} ${LEVELS[level]}`} />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function intensity(week: number, day: number): number {
+  // Weekends lean quieter; two "vacation" weeks are near-empty; otherwise a
+  // smooth pseudo-pattern across the year. Purely cosmetic.
+  if (week === 12 || week === 34) return day === 3 ? 1 : 0;
+  const base = (week * 7 + day * 3) % 11;
+  const weekendPenalty = day === 0 || day === 6 ? 3 : 0;
+  const score = base - weekendPenalty;
+  if (score <= 0) return 0;
+  if (score <= 2) return 1;
+  if (score <= 5) return 2;
+  if (score <= 8) return 3;
+  return 4;
+}

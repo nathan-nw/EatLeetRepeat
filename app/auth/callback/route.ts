@@ -4,11 +4,11 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 // Magic-link / OAuth landing. Supabase redirects here with a `?code=` after the
 // user clicks their email link; we exchange it for a session cookie, then send
 // them on. New users (no LeetCode handle yet) get routed to onboarding by the
-// app tree once they hit `/`.
+// app tree once they hit `/dashboard`.
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
-  const next = searchParams.get('next') ?? '/';
+  const next = searchParams.get('next') ?? '/dashboard';
 
   if (code) {
     const supabase = await createSupabaseServerClient();
