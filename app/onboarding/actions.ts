@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { requireUser } from '@/lib/auth';
 import { validateHandle } from '@/lib/handle';
+import { safeReturnPath } from '@/lib/return-path';
 
 export type OnboardingState = { error?: string };
 
@@ -10,6 +11,7 @@ export async function saveHandle(
   _prev: OnboardingState,
   formData: FormData,
 ): Promise<OnboardingState> {
+  const next = safeReturnPath(formData.get('next'));
   const check = await validateHandle(String(formData.get('handle') ?? ''));
   if (!check.ok) {
     return { error: check.error };
@@ -34,10 +36,10 @@ export async function saveHandle(
         };
       }
       // Already onboarded — just move on.
-      redirect('/dashboard');
+      redirect(next);
     }
     return { error: 'Something went wrong saving your handle. Please try again.' };
   }
 
-  redirect('/dashboard');
+  redirect(next);
 }

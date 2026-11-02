@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import { safeReturnPath } from '@/lib/return-path';
 
 type Mode = 'signin' | 'signup' | 'forgot';
 
@@ -45,6 +46,7 @@ export default function LoginPage() {
     setError(null);
 
     const supabase = createSupabaseBrowserClient();
+    const next = safeReturnPath(new URLSearchParams(window.location.search).get('next'));
 
     try {
       if (mode === 'signin') {
@@ -55,7 +57,7 @@ export default function LoginPage() {
         if (error) throw error;
         // Full navigation so the server sees the freshly-set session cookie.
         // The (app) tree routes to /onboarding if this user has no handle yet.
-        window.location.assign('/');
+        window.location.assign(next);
         return;
       }
 
@@ -64,7 +66,7 @@ export default function LoginPage() {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/confirm?next=/`,
+            emailRedirectTo: `${window.location.origin}/auth/confirm?next=${encodeURIComponent(next)}`,
           },
         });
         if (error) throw error;
@@ -74,8 +76,9 @@ export default function LoginPage() {
       }
 
       // mode === 'forgot'
+      const recovery = next.startsWith('/invite/') ? `/reset-password?next=${encodeURIComponent(next)}` : '/reset-password';
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/confirm?next=/reset-password`,
+        redirectTo: `${window.location.origin}/auth/confirm?next=${encodeURIComponent(recovery)}`,
       });
       if (error) throw error;
       setSentKind('reset');

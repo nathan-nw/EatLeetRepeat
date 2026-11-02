@@ -4,9 +4,23 @@
 // be regenerated/overwritten later without touching consumers. Keep in sync
 // with supabase/schema.sql.
 
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+
 export type Database = {
   public: {
     Tables: {
+      teams: {
+        Row: { id: string; name: string; owner_id: string; invite_token_hash: string; created_at: string; updated_at: string };
+        Insert: { id?: string; name: string; owner_id: string; invite_token_hash: string; created_at?: string; updated_at?: string };
+        Update: { name?: string; owner_id?: string; invite_token_hash?: string; updated_at?: string };
+        Relationships: [];
+      };
+      team_members: {
+        Row: { team_id: string; user_id: string; joined_at: string };
+        Insert: { team_id: string; user_id: string; joined_at?: string };
+        Update: { joined_at?: string };
+        Relationships: [];
+      };
       profiles: {
         Row: {
           id: string; // uuid, == auth.users.id
@@ -192,7 +206,12 @@ export type Database = {
       };
     };
     Views: { [_ in never]: never };
-    Functions: { [_ in never]: never };
+    Functions: {
+      team_list: { Args: Record<string, never>; Returns: Json };
+      team_preview: { Args: { p_hash: string }; Returns: Json };
+      team_manage: { Args: { p_action: string; p_team?: string; p_name?: string; p_hash?: string; p_target?: string }; Returns: string };
+      team_read: { Args: { p_team: string; p_filters?: Json }; Returns: Json };
+    };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };
   };

@@ -11,6 +11,7 @@ Every re-solve is recorded as a distinct event rather than collapsed into "alrea
 
 - **Full spec & rationale:** [`docs/eat-leet-repeat-PRD.md`](docs/eat-leet-repeat-PRD.md)
 - **Working guide (stack, structure, project rules):** [`CLAUDE.md`](CLAUDE.md)
+- **Private teams and deployment:** [`docs/team-tracking.md`](docs/team-tracking.md)
 
 ## How it works
 
@@ -53,7 +54,8 @@ Every re-solve is recorded as a distinct event rather than collapsed into "alrea
 
 ## Views
 
-All views are gated behind auth + onboarding and show **only the signed-in user's** data.
+Personal views are gated behind auth + onboarding and show **only the signed-in user's**
+data. Team views show activity explicitly shared by current members.
 
 | Route | What it shows |
 |-------|---------------|
@@ -61,6 +63,8 @@ All views are gated behind auth + onboarding and show **only the signed-in user'
 | `/repeats` | Problems solved more than once, with each re-solve as a distinct event |
 | `/problems/[slug]` | Full per-problem solve history |
 | `/settings` | Update your registered LeetCode handle |
+| `/teams`, `/teams/[id]` | Private study groups, aligned member heatmaps, and a shared activity feed |
+| `/invite/[token]` | Explicitly accept a team invitation after login/onboarding |
 | `/login`, `/onboarding` | Magic-link sign-in and first-run handle registration |
 
 ## Getting started
@@ -128,7 +132,9 @@ deploy). See PRD §8 and `CLAUDE.md` rule #9.
 ## Security & data model notes
 
 - **Per-user isolation.** Every UI read is scoped server-side to the signed-in user's id, with
-  Supabase RLS as a backstop. A cross-user data leak is treated as a P0.
+  Supabase RLS as a backstop. Private teams are an explicit opt-in exception: members
+  share activity through membership-checked database functions, without exposing
+  private profile fields. A cross-user data leak outside this boundary is a P0.
 - **Accepted submissions only, public data only.** The app never touches LeetCode's authenticated
   endpoints and never stores users' LeetCode session cookies. It does use our own Supabase Auth
   (that's required to sign in).
