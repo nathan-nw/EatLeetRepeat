@@ -1,14 +1,16 @@
 import { redirect } from 'next/navigation';
 import { getProfile, requireUser } from '@/lib/auth';
 import { OnboardingForm } from './onboarding-form';
+import { safeReturnPath } from '@/lib/return-path';
 
-export default async function OnboardingPage() {
+export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
+  const next = safeReturnPath((await searchParams).next);
   await requireUser();
 
   // Already connected a handle? Skip onboarding.
   const profile = await getProfile();
   if (profile) {
-    redirect('/dashboard');
+    redirect(next);
   }
 
   return (
@@ -21,7 +23,7 @@ export default async function OnboardingPage() {
           Enter your public LeetCode username. We’ll track your accepted
           submissions over time — including re-solves. You can change this later.
         </p>
-        <OnboardingForm />
+        <OnboardingForm next={next} />
       </div>
     </main>
   );

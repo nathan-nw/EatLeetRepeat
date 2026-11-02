@@ -5,11 +5,12 @@ import { saveHandle, type OnboardingState } from './actions';
 
 const initialState: OnboardingState = {};
 
-export function OnboardingForm() {
+export function OnboardingForm({ next = '/dashboard' }: { next?: string }) {
   const [state, formAction, pending] = useActionState(saveHandle, initialState);
 
   return (
     <form action={formAction} className="mt-8 flex flex-col gap-3">
+      <input type="hidden" name="next" value={next} />
       <label htmlFor="handle" className="text-sm font-medium">
         LeetCode username
       </label>

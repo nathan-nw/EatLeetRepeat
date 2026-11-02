@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import type { Database } from '../database.types';
+import { safeReturnPath } from '../return-path';
 
 // Public routes reachable while signed out. Everything else requires a session.
 // (`/api/*` is excluded from the middleware matcher entirely — the poller guards
@@ -51,14 +52,19 @@ export async function updateSession(request: NextRequest) {
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
-    return NextResponse.redirect(url);
+    url.search = '';
+    url.searchParams.set('next', safeReturnPath(path === '/onboarding' ? request.nextUrl.searchParams.get('next') : path));
+    const response = NextResponse.redirect(url);
+    supabaseResponse.cookies.getAll().forEach((cookie) => response.cookies.set(cookie));
+    return response;
   }
 
   // Signed-in users belong in the app, not on the landing or login pages.
   if (user && (path === '/' || path === '/login')) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/dashboard';
-    return NextResponse.redirect(url);
+    const url = new URL(safeReturnPath(request.nextUrl.searchParams.get('next')), request.nextUrl.origin);
+    const response = NextResponse.redirect(url);
+    supabaseResponse.cookies.getAll().forEach((cookie) => response.cookies.set(cookie));
+    return response;
   }
 
   return supabaseResponse;

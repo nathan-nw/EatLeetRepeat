@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { EmailOtpType } from '@supabase/supabase-js';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { safeReturnPath } from '@/lib/return-path';
 
 // Email-link landing for password auth. Supports both Supabase email flows so it
 // works whether or not the dashboard email templates have been customised
@@ -20,7 +21,7 @@ export async function GET(request: Request) {
   const code = searchParams.get('code');
   const token_hash = searchParams.get('token_hash');
   const type = searchParams.get('type') as EmailOtpType | null;
-  const next = searchParams.get('next') ?? '/';
+  const next = safeReturnPath(searchParams.get('next'));
 
   const supabase = await createSupabaseServerClient();
 
@@ -36,5 +37,5 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.redirect(`${origin}/login?error=auth`);
+  return NextResponse.redirect(`${origin}/login?error=auth&next=${encodeURIComponent(next)}`);
 }

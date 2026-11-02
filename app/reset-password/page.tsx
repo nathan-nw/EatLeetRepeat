@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import { safeReturnPath } from '@/lib/return-path';
 
 // Set-a-new-password page. Reached after clicking the reset email, which lands
 // on /auth/confirm (type=recovery); that verifies the token and establishes a
@@ -50,7 +51,7 @@ export default function ResetPasswordPage() {
     }
 
     // Password set — full navigation so the app tree re-runs its auth gate.
-    window.location.assign('/');
+    window.location.assign(safeReturnPath(new URLSearchParams(window.location.search).get('next')));
   }
 
   return (

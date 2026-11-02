@@ -1,5 +1,6 @@
 import type { Problem } from '@/lib/database.types';
 import type { SubmissionWithProblem } from '@/lib/dashboard';
+import { contributionLevel } from '@/lib/teams';
 
 // Pure, server/client-safe computation over a user's submissions. No I/O — feed
 // it the result of getUserSubmissions().
@@ -108,11 +109,7 @@ function utcKey(d: Date): string {
 
 // Sequential magnitude buckets (single hue, light→dark). 0 = empty.
 function level(count: number): number {
-  if (count <= 0) return 0;
-  if (count <= 2) return 1;
-  if (count <= 4) return 2;
-  if (count <= 7) return 3;
-  return 4;
+  return contributionLevel(count);
 }
 
 // One problem solved on a given day, for the click-to-open day popover.

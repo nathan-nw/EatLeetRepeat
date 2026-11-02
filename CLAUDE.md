@@ -75,12 +75,12 @@ curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/poll
 9. **No Vercel cron.** Do **not** add a `crons` block to `vercel.json`. Vercel Hobby caps cron at once/day (hourly fails at deploy); scheduling is cron-job.org's job by design.
 10. **Rate-limit hygiene (now multi-user):** one request per user per hour, **staggered** within the run; sane `User-Agent`, `Content-Type: application/json`; back off on HTTP 429 and skip that user's run rather than retrying hard. The endpoint is unofficial and hosting this publicly/multi-user is an accepted ToS risk (PRD §10) — keep volume low and polite; read only **public** data; never handle users' LeetCode credentials.
 11. **Supabase RLS on, with per-user policies.** Each user reads only their own `profiles`/`submissions`/`poll_runs` (`auth.uid() = user_id`); `problems` is readable by any authenticated user. All writes go through the **service role** (poller), which bypasses RLS. Don't grant client-facing write access.
-12. **Per-user data isolation.** Every read in the UI is scoped to the signed-in user's id (server-side), with RLS as backstop. A user must never see another user's submissions — treat any cross-user leak as a P0.
+12. **Per-user data isolation.** Personal views remain scoped to the signed-in user's id with RLS as backstop. Private teams are an explicit opt-in exception: current team members can read shared activity only through membership-checked team RPCs. Never broaden personal-table RLS or return private profile fields to teammates. Unauthorized cross-user access is a P0. See `docs/team-tracking.md`.
 13. **Observability:** every per-user poll writes a `poll_runs` row (`user_id`, `fetched_count`, `new_count`, `status`, `error`). Keep this — it's how we know the poller is alive per user.
 
 ## Out of scope (don't gold-plate)
 
-Historical backfill, failed attempts, LeetCode session-cookie flows, social/sharing, and streak/summary reports beyond the basic count stats. These are noted in PRD §11. Auth is **in** scope (Supabase Auth + onboarding) — but keep it minimal (email + password with a one-time email confirmation on signup, plus a password-reset flow; a single handle field). Ship the core loop first: sign in → set handle → poll (all users) → store → the four views (timeline, heatmap, repeats, per-problem history) + summary stats + filters.
+Failed attempts, server-side LeetCode session-cookie flows, public social feeds, and streak/summary reports beyond the basic count stats remain out of scope. Optional history import and private, opt-in team sharing are implemented exceptions to the original PRD's exclusions; see `docs/team-tracking.md`. Auth uses email + password with email confirmation, password reset, and a single handle field.
 
 ## Definition of done
 
