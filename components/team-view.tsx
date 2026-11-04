@@ -84,10 +84,15 @@ export function TeamView({ initial, filters, userId }: { initial: TeamData; filt
   return <main className="mx-auto w-full max-w-4xl space-y-6 px-4 py-8 sm:px-6" aria-busy={pending}>
     <div>
       <Link href="/teams" className="text-sm text-zinc-500 hover:underline">← Teams</Link>
-      <div className="mt-3 flex items-start justify-between gap-4"><div><h1 className="break-words text-2xl font-semibold">{data.name}</h1><p className="mt-1 text-sm text-zinc-500">Private · {data.members.length} / 20 members · All dates UTC</p></div><button className={teamButton} disabled={pending} onClick={refresh}>{pending ? 'Loading…' : 'Refresh'}</button></div>
+      <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0"><h1 className="break-words text-2xl font-semibold">{data.name}</h1><p className="mt-1 text-sm text-zinc-500">Private · {data.members.length} / 20 members · All dates UTC</p></div>
+        <div className="ml-auto flex shrink-0 items-center gap-2">
+          <button className={teamButton} disabled={pending} onClick={refresh}>{pending ? 'Loading…' : 'Refresh'}</button>
+          <TeamManagement key={data.ownerId} id={data.id} name={data.name} ownerId={data.ownerId} userId={userId} members={data.members} onChanged={refresh} />
+        </div>
+      </div>
       <p className="mt-3 text-xs text-zinc-500">Activity updates on the scheduled polling cycle (about every 30 minutes). Imported history is included. Every accepted submission counts, including re-solves.</p>
     </div>
-    <TeamManagement key={data.ownerId} id={data.id} name={data.name} ownerId={data.ownerId} userId={userId} members={data.members} onChanged={refresh} />
     <fieldset disabled={pending} className="space-y-3 rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
       <legend className="px-1 text-sm font-medium">Filter team activity</legend>
       <div className="flex flex-wrap gap-3">

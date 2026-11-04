@@ -58,7 +58,18 @@ test('private team lifecycle, shared history, filters, paging, and mobile naviga
   await member.screenshot({ path: 'test-results/team-mobile.png', fullPage: true });
 
   await owner.getByRole('button', { name: 'Refresh', exact: true }).click();
-  await owner.getByText('Manage team and invitations', { exact: true }).click();
+  await expect(owner.getByRole('button', { name: 'Delete team', exact: true })).not.toBeVisible();
+  await owner.getByText('Team settings', { exact: true }).click();
+  await expect(owner.getByRole('button', { name: 'Delete team', exact: true })).toBeVisible();
+  await owner.keyboard.press('Escape');
+  await expect(owner.getByRole('button', { name: 'Delete team', exact: true })).not.toBeVisible();
+  await owner.setViewportSize({ width: 390, height: 844 });
+  await owner.getByText('Team settings', { exact: true }).click();
+  expect(await owner.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await owner.screenshot({ path: 'test-results/team-settings-mobile.png', fullPage: true });
+  await owner.getByRole('heading', { name: 'Interview study group', exact: true }).click();
+  await expect(owner.getByRole('button', { name: 'Delete team', exact: true })).not.toBeVisible();
+  await owner.getByText('Team settings', { exact: true }).click();
   await owner.getByLabel('Member', { exact: true }).selectOption({ label: 'member02' });
   owner.on('dialog', (dialog) => dialog.accept());
   await owner.getByRole('button', { name: 'Remove and reset invite', exact: true }).click();
