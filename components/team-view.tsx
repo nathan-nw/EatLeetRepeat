@@ -6,7 +6,8 @@ import { useMemo, useRef, useState, useTransition } from 'react';
 import { readTeam } from '@/app/teams-actions';
 import { calendarWeeks, contributionLevel, teamQuery, type TeamData, type TeamFilters, type TeamGraph } from '@/lib/teams';
 import { DifficultyBadge } from '@/components/difficulty-badge';
-import { TeamManagement, teamButton, teamInput } from '@/components/team-controls';
+import { TeamManagement, teamButton } from '@/components/team-controls';
+import { TeamFilterBar } from '@/components/team-filter-bar';
 
 const COLORS = ['bg-zinc-100 dark:bg-zinc-800/70', 'bg-emerald-200 dark:bg-emerald-900', 'bg-emerald-300 dark:bg-emerald-700', 'bg-emerald-500 dark:bg-emerald-600', 'bg-emerald-600 dark:bg-emerald-400'];
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -93,16 +94,7 @@ export function TeamView({ initial, filters, userId }: { initial: TeamData; filt
       </div>
       <p className="mt-3 text-xs text-zinc-500">Activity updates on the scheduled polling cycle (about every 30 minutes). Imported history is included. Every accepted submission counts, including re-solves.</p>
     </div>
-    <fieldset disabled={pending} className="space-y-3 rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
-      <legend className="px-1 text-sm font-medium">Filter team activity</legend>
-      <div className="flex flex-wrap gap-3">
-        <label className="flex flex-col gap-1 text-xs">Year<select aria-label="Year" className={teamInput} value={filters.year} onChange={(e) => change({ year: Number(e.target.value), page: 1 })}>{[...new Set([...data.years, filters.year])].sort((a, b) => b - a).map((year) => <option key={year}>{year}</option>)}</select></label>
-        <label className="flex flex-col gap-1 text-xs">Difficulty<select aria-label="Difficulty" className={teamInput} value={filters.difficulty} onChange={(e) => change({ difficulty: e.target.value, page: 1 })}><option value="">All difficulties</option>{['Easy', 'Medium', 'Hard'].map((d) => <option key={d}>{d}</option>)}</select></label>
-        <label className="flex min-w-0 flex-col gap-1 text-xs">Tag<select aria-label="Tag" className={`${teamInput} max-w-full`} value={filters.tag} onChange={(e) => change({ tag: e.target.value, page: 1 })}><option value="">All tags</option>{data.tags.map((tag) => <option key={tag}>{tag}</option>)}</select></label>
-      </div>
-      <details><summary className="cursor-pointer text-sm">Members ({filters.members.length || 'all'})</summary><div className="mt-2 flex flex-wrap gap-x-4 gap-y-2">{data.members.map((m) => <label key={m.id} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={filters.members.includes(m.id)} onChange={(e) => change({ page: 1, members: e.target.checked ? [...filters.members, m.id] : filters.members.filter((id) => id !== m.id) })} />{m.handle}</label>)}</div><p className="mt-2 text-xs text-zinc-500">No members selected means everyone.</p></details>
-      <button className={teamButton} onClick={() => change({ members: [], difficulty: '', tag: '', page: 1 })}>Clear filters</button>
-    </fieldset>
+    <TeamFilterBar filters={filters} years={data.years} tags={data.tags} members={data.members} pending={pending} onChange={change} />
     <section aria-label="Member contributions" className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-semibold">Member contributions · {filters.year}</h2><div className="flex items-center gap-1 text-[11px] text-zinc-500">Less {COLORS.map((color) => <span key={color} className={`h-[11px] w-[11px] rounded-[2px] ${color}`} />)} More</div></div>
       {data.graphs.map((graph) => <MemberGraph key={graph.id} graph={graph} year={filters.year} selectedDay={filters.dayMember === graph.id ? filters.day : ''} onDay={(day) => {

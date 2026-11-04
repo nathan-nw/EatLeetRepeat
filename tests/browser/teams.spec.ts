@@ -52,6 +52,17 @@ test('private team lifecycle, shared history, filters, paging, and mobile naviga
   await expect(member.getByText('No recorded solves match these filters.', { exact: false })).toBeVisible();
   await member.getByRole('button', { name: 'Clear filters' }).click();
   await expect(member.getByText('30 submissions', { exact: true })).toBeVisible();
+  const filters = member.getByRole('group', { name: 'Filter team activity', exact: true });
+  await expect(member.getByLabel('Tag', { exact: true })).not.toBeVisible();
+  await filters.getByText('Filters', { exact: true }).click();
+  await member.getByLabel('Tag', { exact: true }).selectOption('Array');
+  await member.getByRole('checkbox', { name: 'member02', exact: true }).check();
+  await member.getByRole('button', { name: 'Apply filters', exact: true }).click();
+  await expect(member).toHaveURL(/tag=Array/);
+  await expect(member.getByRole('heading', { name: 'member01', exact: true })).not.toBeVisible();
+  await expect(member.getByText('30 submissions', { exact: true })).toBeVisible();
+  await member.getByRole('button', { name: 'Clear filters' }).click();
+  await expect(member.getByRole('heading', { name: 'member01', exact: true })).toBeVisible();
   await member.setViewportSize({ width: 390, height: 844 });
   await expect(member.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Teams', exact: true })).toBeVisible();
   expect(await member.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
