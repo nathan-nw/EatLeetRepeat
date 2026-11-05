@@ -50,7 +50,12 @@ export async function readTeam(teamId: string, filters: TeamFilters): Promise<{ 
     console.error('Team read failed', { code: error.code });
     return { error: 'Team unavailable. You may no longer be a member. Refresh to try again.' };
   }
-  return { data: data as unknown as TeamData };
+  const team = data as unknown as TeamData;
+  if (clean.newOnly && !team.newOnlySupported) {
+    console.error('Team filter unavailable', { code: 'TEAM_NEW_PROBLEMS_MIGRATION_REQUIRED' });
+    return { error: 'New problems only is not available yet. You can still view all solves.' };
+  }
+  return { data: team };
 }
 
 export async function previewTeam(token: string): Promise<{ name: string } | null> {

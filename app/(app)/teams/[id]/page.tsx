@@ -18,6 +18,6 @@ export default async function TeamPage({ params, searchParams }: {
   }
   const filters = parseTeamFilters(query);
   const result = await readTeam(id, filters);
-  if (!result.data) return <main className="mx-auto max-w-4xl px-6 py-8"><h1 className="text-xl font-semibold">Team unavailable</h1><p className="mt-3">{result.error}</p><Link href="/teams" className="mt-4 inline-block underline">Back to teams</Link></main>;
+  if (!result.data) return <main className="mx-auto max-w-4xl px-6 py-8"><h1 className="text-xl font-semibold">Team unavailable</h1><p className="mt-3">{result.error}</p>{filters.newOnly && <Link href={`/teams/${id}?year=${filters.year}`} className="mt-4 mr-4 inline-block underline">Show all solves</Link>}<Link href="/teams" className="mt-4 inline-block underline">Back to teams</Link></main>;
   return <TeamView key={query.toString()} initial={result.data} filters={filters} userId={user.id} />;
 }

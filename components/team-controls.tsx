@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { manageTeam } from '@/app/teams-actions';
 import type { TeamMember } from '@/lib/teams';
 
@@ -79,7 +79,25 @@ export function TeamManagement({ id, name, ownerId, userId, members, onChanged }
   const [notice, setNotice] = useState('');
   const [token, setToken] = useState('');
   const [target, setTarget] = useState('');
+  const dropdown = useRef<HTMLDetailsElement>(null);
   const owner = ownerId === userId;
+  useEffect(() => {
+    const closeOutside = (event: PointerEvent) => {
+      if (dropdown.current && !dropdown.current.contains(event.target as Node)) dropdown.current.open = false;
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && dropdown.current?.open) {
+        dropdown.current.open = false;
+        dropdown.current.querySelector('summary')?.focus();
+      }
+    };
+    document.addEventListener('pointerdown', closeOutside);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOutside);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, []);
   function run(action: 'rename' | 'reset' | 'remove' | 'remove_reset' | 'transfer' | 'leave' | 'delete', newName?: string) {
     const prompts: Record<string, string> = {
       reset: 'Invalidate the current invite link and generate a new one?',
@@ -102,15 +120,20 @@ export function TeamManagement({ id, name, ownerId, userId, members, onChanged }
       } catch { setError('Could not update the team. Please try again.'); }
     });
   }
-  return <details className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
-    <summary className="cursor-pointer text-sm font-medium">{owner ? 'Manage team and invitations' : 'Membership'}</summary>
-    <div className="mt-3 space-y-3">
+  return <details ref={dropdown} className="relative" onBlur={(event) => {
+    if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget as Node)) event.currentTarget.open = false;
+  }}>
+    <summary className="flex cursor-pointer list-none items-center gap-1 rounded-lg px-2 py-2 text-xs text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-2 focus-visible:outline-emerald-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 [&::-webkit-details-marker]:hidden">
+      {owner ? 'Team settings' : 'Membership'}
+      <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="m3 4.5 3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+    </summary>
+    <div className="absolute right-0 top-full z-30 mt-2 max-h-[70vh] w-[min(24rem,calc(100vw-2rem))] space-y-4 overflow-y-auto rounded-xl border border-zinc-200 bg-white p-4 shadow-lg dark:border-zinc-700 dark:bg-zinc-950">
       {owner ? <>
         <form className="flex flex-wrap gap-2" onSubmit={(e) => { e.preventDefault(); run('rename', String(new FormData(e.currentTarget).get('name'))); }}>
           <input key={name} aria-label="Team name" name="name" defaultValue={name} required maxLength={80} className={`${teamInput} min-w-0 flex-1`} />
           <button className={teamButton} disabled={pending}>Rename</button>
         </form>
-        <p className="text-xs text-zinc-500">Returning to this page? Generate a new link to invite people. This invalidates the old link.</p>
+        <p className="text-xs text-zinc-500">Generate an invite link to add people. This replaces the previous link.</p>
         <button className={teamButton} disabled={pending} onClick={() => run('reset')}>Reset / generate invite link</button>
         {token && <InviteLink token={token} />}
         <label className="block text-sm">Member
@@ -124,7 +147,7 @@ export function TeamManagement({ id, name, ownerId, userId, members, onChanged }
           <button disabled={pending || !target} className={teamButton} onClick={() => run('remove_reset')}>Remove and reset invite</button>
           <button disabled={pending || !target} className={teamButton} onClick={() => run('transfer')}>Transfer ownership</button>
         </div>
-        <p className="text-xs text-zinc-500">Removal revokes access on subsequent requests. It cannot erase content already loaded. An unchanged invite link lets a removed member rejoin.</p>
+        <p className="text-xs text-zinc-500">Removed members can rejoin using the old invite unless you reset it.</p>
         <p className="text-xs text-zinc-500">To leave, transfer ownership first or delete the team.</p>
         <button disabled={pending} className={`${teamButton} text-red-600`} onClick={() => run('delete')}>Delete team</button>
       </> : <button disabled={pending} className={teamButton} onClick={() => run('leave')}>Leave team</button>}

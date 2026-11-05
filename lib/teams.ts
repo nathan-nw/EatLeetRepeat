@@ -7,13 +7,14 @@ export type TeamEntry = {
   frontend_id: string | null; difficulty: string | null; submitted_at: string;
 };
 export type TeamData = {
+  newOnlySupported?: boolean;
   id: string; name: string; ownerId: string; members: TeamMember[];
   memberTotal: number; graphs: TeamGraph[]; years: number[]; tags: string[]; feed: TeamEntry[];
 };
 export type TeamCursor = { at: string; userId: string; id: string };
 export type TeamFilters = {
   year: number; page: number; members: string[]; difficulty: string; tag: string;
-  day: string; dayMember: string; cursor?: TeamCursor;
+  day: string; dayMember: string; newOnly: boolean; cursor?: TeamCursor;
 };
 export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const INVITE_TOKEN = /^[0-9a-f]{64}$/;
@@ -26,6 +27,7 @@ export function parseTeamFilters(params: URLSearchParams): TeamFilters {
   const validDay = /^\d{4}-\d{2}-\d{2}$/.test(day) &&
     Number.isFinite(Date.parse(day)) && new Date(day).toISOString().slice(0, 10) === day;
   return {
+    newOnly: params.get('newOnly') === 'true',
     year: Number.isInteger(year) && year >= 1970 && year <= 9998 ? year : new Date().getUTCFullYear(),
     page: Number.isInteger(page) && page >= 1 && page <= 4 ? page : 1,
     members: [...new Set(params.getAll('member').filter((id) => UUID.test(id)))].slice(0, 20),
@@ -38,6 +40,7 @@ export function parseTeamFilters(params: URLSearchParams): TeamFilters {
 
 export function teamQuery(filters: TeamFilters): string {
   const params = new URLSearchParams({ year: String(filters.year) });
+  if (filters.newOnly) params.set('newOnly', 'true');
   if (filters.page > 1) params.set('page', String(filters.page));
   filters.members.forEach((id) => params.append('member', id));
   if (filters.difficulty) params.set('difficulty', filters.difficulty);
