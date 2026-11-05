@@ -16,7 +16,8 @@ export function TeamFilterBar({ filters, years, tags, members, pending, onChange
   const dropdown = useRef<HTMLDetailsElement>(null);
   const [tag, setTag] = useState(filters.tag);
   const [selected, setSelected] = useState(filters.members);
-  const extraCount = Number(Boolean(filters.tag)) + Number(filters.members.length > 0);
+  const [newOnly, setNewOnly] = useState(filters.newOnly);
+  const extraCount = Number(Boolean(filters.tag)) + Number(filters.members.length > 0) + Number(filters.newOnly);
   const active = Boolean(filters.difficulty || extraCount);
 
   useEffect(() => {
@@ -48,7 +49,7 @@ export function TeamFilterBar({ filters, years, tags, members, pending, onChange
       {['Easy', 'Medium', 'Hard'].map((difficulty) => <option key={difficulty}>{difficulty}</option>)}
     </select>
     <details ref={dropdown} className="relative ml-auto" onToggle={(event) => {
-      if (event.currentTarget.open) { setTag(filters.tag); setSelected(filters.members); }
+      if (event.currentTarget.open) { setTag(filters.tag); setSelected(filters.members); setNewOnly(filters.newOnly); }
     }} onBlur={(event) => {
       if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget as Node)) event.currentTarget.open = false;
     }}>
@@ -58,11 +59,18 @@ export function TeamFilterBar({ filters, years, tags, members, pending, onChange
       </summary>
       <form className="absolute right-0 top-full z-20 mt-2 w-[min(20rem,calc(100vw-2rem))] space-y-4 rounded-xl border border-zinc-200 bg-white p-4 shadow-lg dark:border-zinc-700 dark:bg-zinc-950" onSubmit={(event) => {
         event.preventDefault();
-        onChange({ tag, members: selected, page: 1 });
+        onChange({ tag, members: selected, newOnly, page: 1 });
         if (dropdown.current) dropdown.current.open = false;
       }}>
         <fieldset disabled={pending} className="space-y-4">
           <legend className="sr-only">More activity filters</legend>
+          <label className="flex flex-col gap-1.5 text-xs font-medium">Solves
+            <select aria-label="Solve type" className={`${control} w-full`} value={newOnly ? 'new' : 'all'} onChange={(e) => setNewOnly(e.target.value === 'new')}>
+              <option value="all">All solves</option>
+              <option value="new">New problems only</option>
+            </select>
+            <span className="font-normal text-zinc-500">Each member’s first recorded solve, including imported history.</span>
+          </label>
           <label className="flex flex-col gap-1.5 text-xs font-medium">Topic
             <select aria-label="Tag" className={`${control} w-full`} value={tag} onChange={(e) => setTag(e.target.value)}>
               <option value="">All tags</option>
@@ -83,7 +91,7 @@ export function TeamFilterBar({ filters, years, tags, members, pending, onChange
         </fieldset>
       </form>
     </details>
-    {active && <button disabled={pending} type="button" className="rounded-lg px-2 py-1.5 text-xs text-zinc-500 hover:underline disabled:opacity-50" onClick={() => onChange({ members: [], difficulty: '', tag: '', page: 1 })}>Clear filters</button>}
-    {extraCount > 0 && <p className="w-full text-xs text-zinc-500">{[filters.tag, filters.members.length ? `${filters.members.length} member${filters.members.length === 1 ? '' : 's'}` : ''].filter(Boolean).join(' · ')}</p>}
+    {active && <button disabled={pending} type="button" className="rounded-lg px-2 py-1.5 text-xs text-zinc-500 hover:underline disabled:opacity-50" onClick={() => onChange({ members: [], difficulty: '', tag: '', newOnly: false, page: 1 })}>Clear filters</button>}
+    {extraCount > 0 && <p className="w-full text-xs text-zinc-500">{[filters.newOnly ? 'New problems only' : '', filters.tag, filters.members.length ? `${filters.members.length} member${filters.members.length === 1 ? '' : 's'}` : ''].filter(Boolean).join(' · ')}</p>}
   </div>;
 }

@@ -7,6 +7,19 @@ that person's activity from subsequent team reads without deleting personal data
 
 ## Deployment
 
+For the **New problems only** filter, apply
+`supabase/migrations/202611050001_team_new_problems.sql` after the original teams
+migration. This replaces only `team_read`; it changes no tables, columns, or data.
+Apply it before deploying the filter UI (the older UI remains compatible).
+
+Under Filters → Solves, choose **New problems only**, then **Apply filters**.
+This shows each member's earliest recorded accepted submission per problem across
+their entire stored history, not just the selected year. Same-timestamp submissions
+are ordered by submission ID to count exactly one event. Both graphs and feed use
+this rule before pagination. Earlier imported history can move the first recorded
+solve to an earlier date. Without complete imports this is not necessarily the
+member's first-ever LeetCode solve. Clear filters restores all solves.
+
 1. Apply `supabase/migrations/202611020001_teams.sql` in the existing project's
    Supabase SQL editor **before deploying this application version**. For a new
    database, `supabase/schema.sql` already includes the migration. Both are safe

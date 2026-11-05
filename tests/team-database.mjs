@@ -19,6 +19,7 @@ export async function database() {
   await db.exec(await readFile(new URL('../supabase/schema.sql', import.meta.url), 'utf8'));
   // Migration must be safe to apply after the canonical schema as well.
   await db.exec(await readFile(new URL('../supabase/migrations/202611020001_teams.sql', import.meta.url), 'utf8'));
+  await db.exec(await readFile(new URL('../supabase/migrations/202611050001_team_new_problems.sql', import.meta.url), 'utf8'));
   await db.exec(`grant select on public.profiles, public.submissions, public.problems to authenticated;`);
   for (let i = 1; i <= 23; i++) {
     await db.query('insert into auth.users(id) values ($1)', [userId(i)]);

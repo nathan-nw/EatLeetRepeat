@@ -63,6 +63,17 @@ test('private team lifecycle, shared history, filters, paging, and mobile naviga
   await expect(member.getByText('30 submissions', { exact: true })).toBeVisible();
   await member.getByRole('button', { name: 'Clear filters' }).click();
   await expect(member.getByRole('heading', { name: 'member01', exact: true })).toBeVisible();
+  await filters.getByText('Filters', { exact: true }).click();
+  await member.getByLabel('Solve type', { exact: true }).selectOption('new');
+  await member.getByRole('button', { name: 'Apply filters', exact: true }).click();
+  await expect(member).toHaveURL(/newOnly=true/);
+  await expect(member.getByText('1 submissions', { exact: true })).toBeVisible();
+  await expect(feed.getByRole('listitem')).toHaveCount(1);
+  await member.reload();
+  await expect(feed.getByRole('listitem')).toHaveCount(1);
+  await member.getByRole('button', { name: 'Clear filters' }).click();
+  await expect(member).not.toHaveURL(/newOnly=/);
+  await expect(member.getByText('30 submissions', { exact: true })).toBeVisible();
   await member.setViewportSize({ width: 390, height: 844 });
   await expect(member.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Teams', exact: true })).toBeVisible();
   expect(await member.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);

@@ -346,6 +346,13 @@ begin
       and s.submitted_at < make_timestamptz(yr + 1, 1, 1, 0, 0, 0, 'UTC')
       and (nullif(p_filters->>'difficulty', '') is null or p.difficulty = p_filters->>'difficulty')
       and (nullif(p_filters->>'tag', '') is null or p_filters->>'tag' = any(p.topic_tags))
+      -- Compare against all recorded history, before year/day/cursor filtering.
+      -- The submission ID breaks timestamp ties so only one event is counted.
+      and (coalesce(p_filters->>'newOnly', 'false') <> 'true' or not exists (
+        select 1 from public.submissions earlier
+        where earlier.user_id = s.user_id and earlier.title_slug = s.title_slug
+          and (earlier.submitted_at, earlier.id) < (s.submitted_at, s.id)
+      ))
   ), daily as (
     select f.user_id, (f.submitted_at at time zone 'UTC')::date::text as day_key, count(*) as count
     from filtered f join visible_members v on v.user_id = f.user_id group by 1, 2
@@ -359,6 +366,7 @@ begin
     order by f.submitted_at desc, f.user_id desc, f.id desc limit 26
   )
   select jsonb_build_object(
+    'newOnlySupported', true,
     'id', team.id, 'name', team.name, 'ownerId', team.owner_id,
     'members', coalesce((select jsonb_agg(jsonb_build_object('id', user_id, 'handle', handle) order by lower(handle), user_id) from members), '[]'::jsonb),
     'memberTotal', (select count(*) from selected_members),

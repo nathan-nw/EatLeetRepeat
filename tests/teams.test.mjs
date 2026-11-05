@@ -30,10 +30,50 @@ test('calendar includes leap day, consistent weekdays, and shared intensity thre
 });
 
 test('filters validate and round-trip multi-member/day selections', () => {
-  const filters = parseTeamFilters(new URLSearchParams(`year=2024&member=${member}&member=${owner}&day=2024-02-29&dayMember=${member}&tag=Dynamic+Programming&difficulty=Hard&page=2`));
+  const filters = parseTeamFilters(new URLSearchParams(`year=2024&member=${member}&member=${owner}&day=2024-02-29&dayMember=${member}&tag=Dynamic+Programming&difficulty=Hard&page=2&newOnly=true`));
+  assert.equal(filters.newOnly, true);
   assert.deepEqual(parseTeamFilters(new URLSearchParams(teamQuery(filters))), filters);
   const invalid = parseTeamFilters(new URLSearchParams('year=oops&page=-1&member=bad&day=2024-02-30&difficulty=no'));
   assert.equal(invalid.page, 1); assert.equal(invalid.day, ''); assert.deepEqual(invalid.members, []); assert.equal(invalid.difficulty, '');
+  assert.equal(invalid.newOnly, false);
+});
+
+test('new problems are first recorded solves per member across all history, with stable pagination', async () => {
+  const first = userId(3), second = userId(4);
+  const hash = tokenHash('new-problems');
+  const team = await manage(db, first, 'create', { name: 'First solves', hash });
+  await manage(db, second, 'join', { hash });
+  await db.query(`insert into public.submissions(id,user_id,title,title_slug,submitted_at,source) values
+    ('old',$1,'Shared','shared','2023-12-31T23:59:59Z','import'),
+    ('repeat',$1,'Shared','shared','2024-01-01T00:00:00Z','poll'),
+    ('first',$2,'Shared','shared','2024-01-01T00:00:00Z','poll'),
+    ('again',$2,'Shared','shared','2024-01-02T00:00:00Z','poll'),
+    ('tie-a',$1,'Tie','tie','2024-02-29T12:00:00Z','poll'),
+    ('tie-b',$1,'Tie','tie','2024-02-29T12:00:00Z','poll')`, [first, second]);
+  let data = await readTeam(db, first, team, { year: 2024, newOnly: true });
+  assert.deepEqual(data.feed.map((e) => e.id), ['tie-a', 'first']);
+  assert.deepEqual(data.graphs.find((g) => g.id === first).days, { '2024-02-29': 1 });
+  assert.deepEqual(data.graphs.find((g) => g.id === second).days, { '2024-01-01': 1 });
+  assert.equal((await readTeam(db, first, team, { year: 2024 })).feed.length, 5);
+  assert.equal((await readTeam(db, first, team, { year: 2024, newOnly: true, day: '2024-01-02', dayMember: second })).feed.length, 0);
+  // A later import can reveal an earlier first solve; never persist a stale flag.
+  await db.query(`insert into public.submissions(id,user_id,title,title_slug,submitted_at,source)
+    values ('backfill',$1,'Shared','shared','2022-01-01T00:00:00Z','import')`, [second]);
+  data = await readTeam(db, first, team, { year: 2024, newOnly: true });
+  assert.deepEqual(data.feed.map((e) => e.id), ['tie-a']);
+  await db.query(`insert into public.submissions(id,user_id,title,title_slug,submitted_at)
+    select 'new-'||n,$1,'New '||n,'new-'||n,'2024-03-01T00:00:00Z' from generate_series(1,30) n`, [first]);
+  const seen = new Set(); let cursor;
+  do {
+    data = await readTeam(db, first, team, { year: 2024, newOnly: true, members: [first], cursor });
+    const page = data.feed.slice(0,25);
+    for (const row of page) { assert.ok(!seen.has(row.id)); seen.add(row.id); }
+    const last = page.at(-1);
+    cursor = data.feed.length > 25 ? { at: last.submitted_at, userId: last.user_id, id: last.id } : null;
+  } while (cursor);
+  assert.equal(seen.size, 31);
+  await assert.rejects(readTeam(db, outsider, team, { newOnly: true }), /Team unavailable/);
+  await manage(db, first, 'delete', { team });
 });
 
 test('private membership, reset links, owner actions, withdrawal, transfer, and deletion', async () => {
