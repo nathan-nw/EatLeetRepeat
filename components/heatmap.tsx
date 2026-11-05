@@ -86,7 +86,7 @@ export function Heatmap({
 
   return (
     <div ref={rootRef} className="relative">
-      <div ref={scrollRef} className="overflow-x-auto">
+      <div ref={scrollRef} className="heatmap-scroll overflow-x-auto">
         <div className="inline-flex min-w-full flex-col gap-1">
           {/* Month labels aligned to the week columns. */}
           <div className="flex gap-[3px] pl-[3px] text-[10px] text-zinc-400 dark:text-zinc-500">
